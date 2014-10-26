@@ -105,36 +105,47 @@ class cov_se:
 	The squared exponential covariance function.
 	Works for general n-dimensional data points.
 
-	f(x1,x2) = a^2 * exp(-b^2 * || x1 - x2||^2)
+	f(x1,x2) = a^2 * exp(-|| (x1 - x2)./b||^2) + c^2*I
 
-	NOTE: The general form of the exp argument is : (x1-x2)^T * M * (x1-x2)
-	But if M = sI (isotropic-diagonal), then this is equivalent to having s*||(x1-x2)||^2
+		where,
+			a : signal standard-dev
+			b : dimensionwise unit length
+			c : observation noise standard-dev
 	"""
-	def __init__(self, a=None, b_inv=None):
+	def set_hyperparam(self, a,b,c):
 		"""
-		a,b_inv = 1/b as defined above.
-
-		a : Scale of the variance (std^2)
-		b : Inverse unit length (1/length units)
-
-		If any of the parameters are set to None,
-		this class's .train method can be used to 
-		find an optimal value for these hyper-parameters.
+		Set the hyperparameters.
 		"""
-		self.a = a
-		self.b = 1.0/(b_inv+eps)
+		self.a, self.b, self.c = a,b,c
 
-		self.a2 = a*a
-		self.b2 = self.b*self.b
+	def nll(self, x, y, abc=None, grad=False):
+		"""
+		Returns the negative log-likelihood : p(y|x,th),
+		where, abc are the hyper-parameters. 
+			If abc==None, then it uses the self.a,b,c
+			to compute the value and the gradient.
 
-	def _check_params(self):
-		if self.a == None and self.b == None :
-			print "The hyper-parameters are None. Call .train before using."
+		@params:
+			grad : if TRUE, this function also returns
+				   the partial derivatives of nll w.r.t
+				   each hyper-parameter.
+		"""
+		if abc == None:
+			a,b,c, = self.a, self.b, self. c
+		else:
+			assert len(abc) >= 3, "SqExp Cov : Too few hyper-parameters"
+			a = abc[0], abc[1:-1], abc[-1]
+
+		
+
 
 	def train(self, x_nd, y_nm):
 		"""
 		Find the optimal value of the hyper-parameters a,b 
 		given the training data of length n.
+
+		Uses scipy's optimization function: scipy.optimize.minimize
+		
 		"""
 		pass
 
@@ -190,6 +201,10 @@ class GPR:
 		S  = self.f_k.get_covmat(x_nd)
 		S = make_psd(S, p=1e-8, verbose=False)
 		return np.random.multivariate_normal(mu, S), S
+
+	def predict(self, x_in, y_in, x_out):
+		pass
+
 
 def plot_gpr(x,y,std, ax=None):
 	"""
