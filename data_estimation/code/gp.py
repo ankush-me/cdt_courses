@@ -90,21 +90,6 @@ def make_psd(M, p=0.0, verbose=True):
 	return M_psd
 
 
-class mu_constant:
-	"""
-	Class to represent constant valued function -- suitable for use as a 
-	mean function for the GP.
-
-	@params : 
-		c : value of the fucntion
-	"""
-	def __init__(self, c=0):
-		self.c = c
-
-	def get_mu(self, x):
-		return self.c*np.ones_like(x)
-
-
 class GPR:
 	"""
 	Gaussian Process Regression:
@@ -154,7 +139,7 @@ class GPR:
 
 		return mu_cond, K_cond
 
-def plot_gpr(x,y,std, y_gt=None, ax=None):
+def plot_gpr(x,y,std, y_gt=None, xlabel=None, ylabel=None, title=None, ax=None):
 	"""
 	plot (x,y) with std being the standard deviation.
 	ax : matplotlib axis
@@ -167,8 +152,10 @@ def plot_gpr(x,y,std, y_gt=None, ax=None):
 	ax.fill_between(x, y+std, y-std, alpha=0.2, facecolor='r')
 	ax.fill_between(x, y+2*std, y-2*std, alpha=0.2, facecolor='r')
 	ax.plot(x,y,'0.40', linewidth=2, label='prediction')
-	if y_gt!=None:
-		ax.plot(x,y_gt,'g.',label='ground truth')
+	if y_gt!=None: ax.plot(x[:len(y_gt)],y_gt,'g.',label='ground truth')
+	if xlabel!=None: plt.xlabel(xlabel)
+	if ylabel!=None: plt.ylabel(ylabel)
+	if title!=None : plt.title(title)
 	plt.legend()
 	plt.show()
 
@@ -176,7 +163,7 @@ def test_sample_gpr():
 	"""
 	Sample the gaussian process and plot it.
 	"""
-	gpr = GPR(mu_constant(5), cov_se(.1,15))
+	gpr = GPR(cov.mu_constant(5), cov_se(.1,15))
 	x = np.linspace(0,100,1000)
 	y, S = gpr.sample(x)
 	std  = np.sqrt(np.diag(S))
@@ -198,7 +185,7 @@ def test_predict_gpr():
 	yi_gt = y_gt[d_idx]
 	obs_std= np.std(yi_gt-yi_n)
 	
-	f_mu = mu_constant(np.mean(yi_n))
+	f_mu = cov.mu_constant(np.mean(yi_n))
 	f_cov= cov.CovSqExpARD()
 	f_cov.set_hyperparam(1,np.array([100]), obs_std)
 
@@ -213,22 +200,22 @@ def test_train_gpr():
 	Test training GPR covariance hyperparameters.
 	"""
 	x = tot_mins
-	y = dcol(colmap['h'])
-	y_gt = dcol(colmap['h_gt'])
+	y = dcol(colmap['t'])
+	y_gt = dcol(colmap['t_gt'])
 
 	d_idx = np.isfinite(y)
 	xi_n, yi_n = x[d_idx], y[d_idx]
 	x0_m       = x[np.logical_not(d_idx)]
 	
 	f_cov= cov.CovSqExpARD()
-	f_mu = mu_constant(np.mean(yi_n))
+	f_mu = cov.mu_constant(np.mean(yi_n))
 
 	## optimize for the hyper-parameters:
 	##   initial guess:
 	## t_gt : 2,100,1.0
 	signal_std = 2.0
 	len_scales = np.array([100])
-	obs_std    = 0.5
+	obs_std    = 1.0 #0.5
 	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
 	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
 	resx = np.squeeze(res.x)
@@ -259,7 +246,7 @@ def test_train_gpr_periodic():
 	x0_m       = x[np.logical_not(d_idx)]
 	
 	f_cov= cov.Periodic()
-	f_mu = mu_constant(np.mean(yi_n))
+	f_mu = cov.mu_constant(np.mean(yi_n))
 
 	## optimize for the hyper-parameters:
 	##   initial guess:
@@ -285,6 +272,106 @@ def test_train_gpr_periodic():
 	print "** RMS ERROR: ", rms(y_gt, yo_mu)
 	plot_gpr(x,yo_mu, y_std, y_gt)
 
+
+def generate_plots():
+	x = tot_mins
+	y = dcol(colmap['h'])
+	y_gt = dcol(colmap['h_gt'])
+	d_idx = np.isfinite(y)
+	xi_n, yi_n = x[d_idx], y[d_idx]
+	x0_m       = x[np.logical_not(d_idx)]
+	N = len(x)
+	dx = (np.max(x)-np.min(x))/(N+0.0)
+	x_extended  = np.r_[x , np.max(x) + 1 + np.arange(250)*dx]
+
+	
+	f_cov= cov.Periodic()
+	f_mu = cov.mu_constant(np.mean(yi_n))
+	signal_std = 1.0
+	slope      = 1.0
+	period     = 1500
+	obs_std    = 1.0
+	th0 = np.log(np.r_[signal_std, slope, period, obs_std])
+	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
+	resx = np.squeeze(res.x)
+	rest = resx
+	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
+	f_cov.print_hyperparam()
+	gpr = GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x_extended)
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+	print "** {Periodic, Constant} RMS ERROR: ", rms(y_gt, yo_mu[:N])
+	plot_gpr(x_extended,yo_mu, y_std, y_gt,
+			 xlabel="Time (min)", ylabel="Tide Height (m)",
+			 title="COV : Periodic, MEAN : mean(y), rms = %0.3f"%rms(y_gt, yo_mu[:N]))
+	plt.show(block=True)
+	"""
+	
+	f_cov= cov.CovSqExpARD()
+	f_mu = cov.mu_constant(np.mean(yi_n))
+	signal_std = 2.0
+	len_scales = np.array([100])
+	obs_std    = 0.5
+	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
+	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
+	resx = np.squeeze(res.x)
+	f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1])
+	f_cov.print_hyperparam()
+	gpr = GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x_extended)
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+	print "*** {SqExp, constant} RMS error: ", rms(y_gt, yo_mu[:N])
+	plot_gpr(x_extended,yo_mu, y_std, y_gt,
+			 xlabel="Time (min)", ylabel="Tide Height (m)",
+			 title="COV : SqExp, MEAN : mean(y), rms = %0.3f"%rms(y_gt, yo_mu[:N]))
+	plt.show(block=True)
+	"""
+
+	f_cov= cov.Periodic()
+	f_mu = cov.mu_spline(xi_n, yi_n)
+	signal_std = 1.0
+	slope      = 1.0
+	period     = 100
+	obs_std    = 1.0
+	th0 = np.log(np.r_[signal_std, slope, period, obs_std])
+	#res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
+	#resx = np.squeeze(res.x)
+	resx = rest
+	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
+	f_cov.print_hyperparam()
+	gpr = GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+	print "** {Periodic, Spline} RMS ERROR: ", rms(y_gt, yo_mu[:N])
+	plot_gpr(x,yo_mu, y_std, y_gt,
+			 xlabel="Time (min)", ylabel="Tide Height (m)",
+			 title="COV : Periodic, MEAN : spline, rms = %0.3f"%rms(y_gt, yo_mu[:N]))
+	plt.show(block=True)
+	"""
+
+	f_cov= cov.CovSqExpARD()
+	f_mu = cov.mu_spline(xi_n, yi_n)
+	signal_std = 0.1
+	len_scales = np.array([1])
+	obs_std    = 2
+	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
+	#res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
+	#resx = np.squeeze(res.x)
+	print "inital    hyperparams : ", th0
+	print "optimized hyperparams : ", resx
+	f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1])
+	f_cov.print_hyperparam()
+	gpr = GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+	print "** {SqExp, Spline} RMS error: ", rms(y_gt, yo_mu[:N])
+	plot_gpr(x,yo_mu, y_std, y_gt,
+			 xlabel="Time (min)", ylabel="Tide Height (m)",
+			 title="COV : SqExp, MEAN : spline, rms = %0.3f"%rms(y_gt, yo_mu[:N]))
+	plt.show(block=True)
+	"""
+
+
 def test_train_gpr_product():
 	"""
 	Test training GPR covariance hyperparameters.
@@ -298,9 +385,9 @@ def test_train_gpr_product():
 	x0_m       = x[np.logical_not(d_idx)]
 	
 	f_cov= cov.ProductCov(cov.CovSqExpARD(), cov.Periodic(), 3, 4)
-	f_mu = mu_constant(np.mean(yi_n))
+	f_mu = cov.mu_constant(np.mean(yi_n))
 
-	th0 = np.log(np.r_[0.8088, 88.27, 0.2, 0.369, 1.1692, 1500, 0.2])
+	th0 = np.log(np.r_[1, 500, 0.4, 1.0, 1.0, 1340, 0.1])
 	
 	"""
 	_, deriv =  f_cov.nll(th0, xi_n, yi_n-f_mu.get_mu(xi_n), True, False)
@@ -339,6 +426,7 @@ def test_train_gpr_product():
 #test_predict_gpr()
 #test_train_gpr()
 #test_train_gpr_periodic()
-test_train_gpr_product()
+generate_plots()
+#test_train_gpr_product()
 #plt.show()
 #test_sample_gpr()

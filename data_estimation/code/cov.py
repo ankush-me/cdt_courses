@@ -2,7 +2,43 @@ import numpy as np
 import numpy.linalg as nla
 import scipy.spatial.distance as ssd
 import scipy.optimize as opt
+from scipy import interpolate
 
+
+class mu_constant:
+	"""
+	Class to represent constant valued function -- suitable for use as a 
+	mean function for the GP.
+
+	@params : 
+		c : value of the fucntion
+	"""
+	def __init__(self, c=0):
+		self.c = c
+
+	def get_mu(self, x):
+		out =  self.c*np.ones_like(x)
+		return out
+
+class mu_spline:
+	"""
+	Class to represent fit a cubic spline to approximate the mean function.
+	@params:
+		{x,y} to use for interpolation. x,y are both 1D.
+	"""
+	def __init__(self, x,y):
+		self.x = x
+		self.x[408] += 0.5
+		self.y = y
+
+	def get_mu(self, xnew):
+		ndim  = xnew.ndim
+		xnew = np.squeeze(xnew)
+		tck = interpolate.splrep(self.x, self.y, s=0)
+		ynew = interpolate.splev(xnew, tck, der=0)
+		if ndim==2 : ynew = np.atleast_2d(ynew).T
+		return ynew
+		
 
 class CovSqExpARD:
 	"""
@@ -469,7 +505,7 @@ class ProductCov:
 
 		## compute the determinant using LU factorization:
 		sign, log_det = nla.slogdet(K)
-		assert sign > 0, "Periodic Cov : covariance matrix is not PSD."
+		#assert sign > 0, "Periodic Cov : covariance matrix is not PSD."
 		
 		## compute the inverse of the covariance matrix through gaussian
 		## elimination:
@@ -539,4 +575,6 @@ class ProductCov:
 		res = opt.minimize(self.nll, th0, args=(x_nd, y_n,False,False),
 						   method='CG', jac=False,
 						   options={'maxiter':15, 'disp':True})
+
+
 		return res
