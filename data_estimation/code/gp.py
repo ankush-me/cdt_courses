@@ -272,6 +272,44 @@ def test_train_gpr_periodic():
 	print "** RMS ERROR: ", rms(y_gt, yo_mu)
 	plot_gpr(x,yo_mu, y_std, y_gt)
 
+def plot_nll():
+	x = tot_mins
+	y = dcol(colmap['h'])
+	y_gt = dcol(colmap['h_gt'])
+	d_idx = np.isfinite(y)
+	xi_n, yi_n = x[d_idx], y[d_idx]
+
+	f_cov= cov.CovSqExpARD()
+	f_mu = cov.mu_constant(np.mean(yi_n))
+	signal_std = 0.80884
+
+	N = 50
+	ll,nn = np.meshgrid(np.linspace(np.log(0.1), np.log(150), N),
+						np.linspace(np.log(0.005), np.log(5), N))
+
+	z_nll = np.empty((N,N))
+	i = 0
+	for xi in range(N):
+		for yi in range(N):
+			i +=1
+			print i
+			z_nll[yi,xi] =  f_cov.nll(np.r_[np.log(signal_std), ll[yi,xi], nn[yi,xi]], xi_n, yi_n, grad=False, use_self_hyper=False)
+
+	min_xy = np.unravel_index(np.argmin(z_nll), z_nll.shape)
+
+
+	cset = plt.contour(ll,nn,z_nll, colors='k')
+	ax = plt.gca()
+	xloc, yloc = ll[min_xy[0],min_xy[1]], nn[min_xy[0],min_xy[1]]
+	ax.scatter(xloc, yloc, s=100, c='r')
+	ax.annotate("(%0.1f, %0.3f)"%(np.exp(xloc), np.exp(yloc)), (xloc, yloc),  horizontalalignment='right')
+	im   = plt.imshow(z_nll, origin='lower', cmap=plt.get_cmap('jet'), vmin=z_nll.min(), vmax=z_nll.max(), extent=[np.min(ll), np.max(ll), np.min(nn), np.max(nn)])
+	im.set_interpolation('bilinear')
+	plt.xlabel("log(length-scale)")
+	plt.ylabel("log(observation noise std-dev)")
+	plt.title("Negative Log-Likelihood")
+	plt.colorbar()
+	plt.show()
 
 def generate_plots():
 	x = tot_mins
@@ -284,7 +322,7 @@ def generate_plots():
 	dx = (np.max(x)-np.min(x))/(N+0.0)
 	x_extended  = np.r_[x , np.max(x) + 1 + np.arange(250)*dx]
 
-	
+	"""
 	f_cov= cov.Periodic()
 	f_mu = cov.mu_constant(np.mean(yi_n))
 	signal_std = 1.0
@@ -325,8 +363,8 @@ def generate_plots():
 			 xlabel="Time (min)", ylabel="Tide Height (m)",
 			 title="COV : SqExp, MEAN : mean(y), rms = %0.3f"%rms(y_gt, yo_mu[:N]))
 	plt.show(block=True)
-	"""
 
+	"""
 	f_cov= cov.Periodic()
 	f_mu = cov.mu_spline(xi_n, yi_n)
 	signal_std = 1.0
@@ -347,7 +385,6 @@ def generate_plots():
 			 xlabel="Time (min)", ylabel="Tide Height (m)",
 			 title="COV : Periodic, MEAN : spline, rms = %0.3f"%rms(y_gt, yo_mu[:N]))
 	plt.show(block=True)
-	"""
 
 	f_cov= cov.CovSqExpARD()
 	f_mu = cov.mu_spline(xi_n, yi_n)
@@ -426,7 +463,8 @@ def test_train_gpr_product():
 #test_predict_gpr()
 #test_train_gpr()
 #test_train_gpr_periodic()
-generate_plots()
+#generate_plots()
+plot_nll()
 #test_train_gpr_product()
 #plt.show()
 #test_sample_gpr()
