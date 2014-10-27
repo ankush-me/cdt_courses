@@ -35,8 +35,14 @@ class CovSqExpARD:
 	def set_log_hyperparam(self, lg_a,lg_b,lg_c):
 		self.set_hyperparam(np.exp(lg_a), np.exp(lg_b), np.exp(lg_c))
 
+	def print_hyperparam(self):
+		print "Square-Exponential Hyperparams:\n==============================="
+		print "signal std    : ", np.sqrt(self.a2)
+		print "length-scales :", self.b
+		print "noise std     : ", np.sqrt(self.c2)
 
-	def nll(self, x_nd, y_n, log_abc=None, grad=False):
+
+	def nll(self, log_abc, x_nd, y_n, grad=False, use_self_hyper=True):
 		"""
 		Returns the negative log-likelihood : -log[p(y|x,th)],
 		where, abc are the LOG -- hyper-parameters. 
@@ -52,9 +58,10 @@ class CovSqExpARD:
 				   the partial derivatives of nll w.r.t
 				   each (log) hyper-parameter.
 		"""
-		if log_abc == None:
+		if use_self_hyper:
 			a2,b,c2, = self.a2, self.b, self.c2
 		else:
+			log_abc = np.squeeze(log_abc)			
 			assert len(log_abc) >= 3, "SqExp Cov : Too few hyper-parameters"
 			a2 = np.exp(2*log_abc[0])
 			b  = np.exp(log_abc[1:-1])
@@ -63,9 +70,11 @@ class CovSqExpARD:
 		## make the data-points a 2D matrix:
 		if x_nd.ndim==1:
 			x_nd = np.atleast_2d(x_nd).T
+		if y_n.ndim==1:
+			y_n = np.atleast_2d(y_n).T
 
-		N,d = self.x_nd.shape
-		assert len(y_n)==n, "x and y shape mismatch."
+		N,d = x_nd.shape
+		assert len(y_n)==N, "x and y shape mismatch."
 		x_nd = x_nd/b  ## normalize by the length-scale
 		D = ssd.pdist(x_nd, 'sqeuclidean')
 		K = a2 * np.exp(-0.5*ssd.squareform(D))
@@ -77,14 +86,14 @@ class CovSqExpARD:
 		
 		## compute the inverse of the covariance matrix through gaussian
 		## elimination:
-		K_inv = np.linalg.solve(K_n, np.eye(N))
+		K_inv = nla.solve(K_n, np.eye(N))
 		Ki_y  = K_inv.dot(y_n)
 
 		## negative log-likelihood:
-		nloglik = 0.5*( N*self.log_2pi + log_det + y_nd.T.dot(Ki_y))
-
+		nloglik = 0.5*( N*self.log_2pi + log_det + y_n.T.dot(Ki_y))
+		
 		if grad: ## compute the gradient wrt to hyper-params:
-			K_diff = K_i - Ki_y.dot(Ki_y.T)
+			K_diff = K_inv - Ki_y.dot(Ki_y.T)
 			Tr_arg = K_diff * K
 
 			dfX    = np.empty(d+2)
@@ -92,9 +101,9 @@ class CovSqExpARD:
 			dfX[-1]= c2 * np.trace(K_diff)
 
 			for i in xrange(d):
-				x_sqdiff = ssd.squareform(ssd.pdist(x_nd[:,i], 'sqeuclidean'))
+				xd = np.atleast_2d(x_nd[:,i]).T
+				x_sqdiff = ssd.squareform(ssd.pdist(xd, 'sqeuclidean'))
 				dfX[i+1] = 0.5*np.sum(np.sum(Tr_arg * x_sqdiff))
-
 			return nloglik, dfX
 
 		return nloglik
@@ -125,13 +134,21 @@ class CovSqExpARD:
 		return K
 
 
-def train(self, f_k, x_nd, y_n):
-	"""
-	Find the optimal value of the hyper-parameters a,b,c
-	given the training data of length n.
+	def train(self, th0, x_nd, y_n):
+		"""
+		Find the optimal value of the hyper-parameters a,b,c
+		given the training data of length n.
 
-	Uses scipy's optimization function: scipy.optimize.minimize	
-	"""
-	pass
+		Uses scipy's optimization function: scipy.optimize.minimize	
+		"""
+		if x_nd.ndim==1: x_nd = np.atleast_2d(x_nd).T
 
+		n,d = x_nd.shape
+		assert len(th0)==d+2, "cov.train : initial guess shape mismatch"
+
+		print "Optimizing hyper-parameters using conjugate gradient :"
+		res = opt.minimize(self.nll, th0, args=(x_nd, y_n,True,False),
+						   method='CG', jac=True,
+						   options={'maxiter':20, 'disp':False})
+		return res
 
