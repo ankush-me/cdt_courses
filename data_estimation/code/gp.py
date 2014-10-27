@@ -187,14 +187,17 @@ def test_predict_gpr():
 	y = dcol(colmap['h'])
 	y_gt = dcol(colmap['h_gt'])
 
-
 	d_idx = np.isfinite(y)
 	xi_n, yi_n = x[d_idx], y[d_idx]
 	x0_m       = x[np.logical_not(d_idx)]
 
+	yi_gt = y_gt[d_idx]
+	obs_std= np.std(yi_gt-yi_n)
+	print obs_std
+
 	f_mu = mu_constant(np.mean(yi_n))
 	f_cov= cov.CovSqExpARD()
-	f_cov.set_hyperparam(1,np.array([50]), 0.01)
+	f_cov.set_hyperparam(1,np.array([75]), obs_std)
 
 	gpr = GPR(f_mu, f_cov)
 	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
