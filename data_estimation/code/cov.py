@@ -125,13 +125,13 @@ class CovSqExpARD:
 		return K
 
 
-def train(self, x_nd, y_nm):
+def train(self, f_k, x_nd, y_n):
 	"""
-	Find the optimal value of the hyper-parameters a,b 
+	Find the optimal value of the hyper-parameters a,b,c
 	given the training data of length n.
 
 	Uses scipy's optimization function: scipy.optimize.minimize	
 	"""
-		pass
+	pass
 
 
