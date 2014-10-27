@@ -139,7 +139,7 @@ class GPR:
 
 		return mu_cond, K_cond
 
-def plot_gpr(x,y,std, y_gt=None, xlabel=None, ylabel=None, title=None, ax=None):
+def plot_gpr(x,y,std, y_gt=None, xlabel=None, ylabel=None, title=None, ax=None, y_obs=None):
 	"""
 	plot (x,y) with std being the standard deviation.
 	ax : matplotlib axis
@@ -153,6 +153,7 @@ def plot_gpr(x,y,std, y_gt=None, xlabel=None, ylabel=None, title=None, ax=None):
 	ax.fill_between(x, y+2*std, y-2*std, alpha=0.2, facecolor='r')
 	ax.plot(x,y,'0.40', linewidth=2, label='prediction')
 	if y_gt!=None: ax.plot(x[:len(y_gt)],y_gt,'g.',label='ground truth')
+	if y_obs!=None: ax.plot(x, y_obs, 'r.', label='observation')
 	if xlabel!=None: plt.xlabel(xlabel)
 	if ylabel!=None: plt.ylabel(ylabel)
 	if title!=None : plt.title(title)
@@ -272,6 +273,41 @@ def test_train_gpr_periodic():
 	print "** RMS ERROR: ", rms(y_gt, yo_mu)
 	plot_gpr(x,yo_mu, y_std, y_gt)
 
+
+def seq_predict():
+	x = tot_mins
+	y = dcol(colmap['t'])
+	y_gt = dcol(colmap['t_gt'])
+	d_idx = np.nonzero(np.isfinite(y))[0]
+	
+	f_cov= cov.CovSqExpARD()
+
+	# parameters for temperature:
+	f_cov.set_hyperparam(2.676621, np.array([65.65937]), 0.32133)
+	
+	## parameter for height:
+	#f_cov.set_hyperparam(0.808839, np.array([88.27811]), 0.0293146)
+	f_mu = cov.mu_constant(np.mean(y[d_idx]))
+	gpr = GPR(f_mu, f_cov)
+	
+	#d_idx = d_idx[np.logical_or(d_idx<5, d_idx >=20)]
+
+	M = len(x)
+	y_seq_mu = np.empty(M)
+	y_seq_std= np.empty(M)
+	for i in xrange(M):
+		print i
+		x_new = x[i]
+		x_obs, y_obs = x[d_idx[d_idx<=i]], y[d_idx[d_idx<=i]]
+		y_seq_mu[i], var = gpr.predict(x_obs, y_obs, np.atleast_1d(x_new))
+		y_seq_std[i] = np.sqrt(var[-1,-1])
+
+	plot_gpr(x,y_seq_mu, y_seq_std, y_gt,
+			 xlabel="Time (min)", ylabel="Temperature (C)",
+			 title="Sequential Prediction",
+			 y_obs=y)
+	plt.show(block=True)
+
 def plot_nll():
 	x = tot_mins
 	y = dcol(colmap['h'])
@@ -295,14 +331,13 @@ def plot_nll():
 			print i
 			z_nll[yi,xi] =  f_cov.nll(np.r_[np.log(signal_std), ll[yi,xi], nn[yi,xi]], xi_n, yi_n, grad=False, use_self_hyper=False)
 
-	min_xy = np.unravel_index(np.argmin(z_nll), z_nll.shape)
-
-
+	#min_xy = np.unravel_index(np.argmin(z_nll), z_nll.shape)
 	cset = plt.contour(ll,nn,z_nll, colors='k')
 	ax = plt.gca()
-	xloc, yloc = ll[min_xy[0],min_xy[1]], nn[min_xy[0],min_xy[1]]
+	#xloc, yloc = ll[min_xy[0],min_xy[1]], nn[min_xy[0],min_xy[1]]
+	xloc, yloc = np.log(88.27811177), np.log(0.02931)
 	ax.scatter(xloc, yloc, s=100, c='r')
-	ax.annotate("(%0.1f, %0.3f)"%(np.exp(xloc), np.exp(yloc)), (xloc, yloc),  horizontalalignment='right')
+	ax.annotate("(88.28, 0.029)", (xloc, yloc),  horizontalalignment='right', color='w')
 	im   = plt.imshow(z_nll, origin='lower', cmap=plt.get_cmap('jet'), vmin=z_nll.min(), vmax=z_nll.max(), extent=[np.min(ll), np.max(ll), np.min(nn), np.max(nn)])
 	im.set_interpolation('bilinear')
 	plt.xlabel("log(length-scale)")
@@ -313,8 +348,8 @@ def plot_nll():
 
 def generate_plots():
 	x = tot_mins
-	y = dcol(colmap['h'])
-	y_gt = dcol(colmap['h_gt'])
+	y = dcol(colmap['t'])
+	y_gt = dcol(colmap['t_gt'])
 	d_idx = np.isfinite(y)
 	xi_n, yi_n = x[d_idx], y[d_idx]
 	x0_m       = x[np.logical_not(d_idx)]
@@ -349,7 +384,7 @@ def generate_plots():
 	f_mu = cov.mu_constant(np.mean(yi_n))
 	signal_std = 2.0
 	len_scales = np.array([100])
-	obs_std    = 0.5
+	obs_std    = 1.0
 	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
 	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
 	resx = np.squeeze(res.x)
@@ -464,7 +499,8 @@ def test_train_gpr_product():
 #test_train_gpr()
 #test_train_gpr_periodic()
 #generate_plots()
-plot_nll()
+#plot_nll()
+seq_predict()
 #test_train_gpr_product()
 #plt.show()
 #test_sample_gpr()
