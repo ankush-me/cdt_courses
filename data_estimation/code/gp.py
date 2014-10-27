@@ -8,6 +8,9 @@ import datetime as dt
 
 import cov
 
+## de-clutter terminal output:
+import warnings
+warnings.simplefilter(action = "ignore", category = FutureWarning)
 
 eps = 1e-8
 
@@ -44,6 +47,9 @@ def viz():
 	plt.plot(d[d.columns[0]], d[d.columns[5]], label=d.columns[5])
 	plt.title(d.columns[5])
 
+def rms(x,x_p):
+	x,x_p = np.squeeze(x), np.squeeze(x_p)
+	return nla.norm(x-x_p)/np.sqrt(len(x))
 
 def make_psd(M, p=0.0, verbose=True):
 	"""
@@ -236,6 +242,8 @@ def test_train_gpr():
 	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
 	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
 
+	print "** rms error: ", rms(y_gt, yo_mu)
+
 	plot_gpr(x,yo_mu, y_std, y_gt)
 
 def test_train_gpr_periodic():
@@ -256,11 +264,43 @@ def test_train_gpr_periodic():
 	## optimize for the hyper-parameters:
 	##   initial guess:
 	## t_gt : 2,100,1.0
-	signal_std = 2.0
+	signal_std = 1.0
 	slope      = 1.0
-	period     = 1000
-	obs_std    = 5.0
+	period     = 1400
+	obs_std    = 1.0
 	th0 = np.log(np.r_[signal_std, slope, period, obs_std])
+	
+	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
+	resx = np.squeeze(res.x)
+	print "inital    hyperparams : ", th0
+	print "optimized hyperparams : ", resx
+
+	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
+	f_cov.print_hyperparam()
+
+	gpr = GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+
+	print "** RMS ERROR: ", rms(y_gt, yo_mu)
+	plot_gpr(x,yo_mu, y_std, y_gt)
+
+def test_train_gpr_product():
+	"""
+	Test training GPR covariance hyperparameters.
+	"""
+	x = tot_mins
+	y = dcol(colmap['h'])
+	y_gt = dcol(colmap['h_gt'])
+
+	d_idx = np.isfinite(y)
+	xi_n, yi_n = x[d_idx], y[d_idx]
+	x0_m       = x[np.logical_not(d_idx)]
+	
+	f_cov= cov.ProductCov(cov.CovSqExpARD(), cov.Periodic(), 3, 4)
+	f_mu = mu_constant(np.mean(yi_n))
+
+	th0 = np.log(np.r_[0.8088, 88.27, 0.2, 0.369, 1.1692, 1500, 0.2])
 	
 	"""
 	_, deriv =  f_cov.nll(th0, xi_n, yi_n-f_mu.get_mu(xi_n), True, False)
@@ -278,24 +318,27 @@ def test_train_gpr_periodic():
 	print "numerical :", df
 	print "analytical:", deriv
 	"""
-	
 	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
 	resx = np.squeeze(res.x)
 	print "inital    hyperparams : ", th0
 	print "optimized hyperparams : ", resx
 
-	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
+	f_cov.set_log_hyperparam(resx)
 	f_cov.print_hyperparam()
 
 	gpr = GPR(f_mu, f_cov)
 	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
 	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
 
+	print "** rms error: ", rms(y_gt, yo_mu)
 	plot_gpr(x,yo_mu, y_std, y_gt)
+
+
 
 #visualize_pandas()
 #test_predict_gpr()
 #test_train_gpr()
-test_train_gpr_periodic()
+#test_train_gpr_periodic()
+test_train_gpr_product()
 #plt.show()
 #test_sample_gpr()
