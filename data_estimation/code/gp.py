@@ -182,8 +182,8 @@ def test_predict_gpr():
 	covariance parameters.
 	"""
 	x = tot_mins
-	y = dcol(colmap['h'])
-	y_gt = dcol(colmap['h_gt'])
+	y = dcol(colmap['t'])
+	y_gt = dcol(colmap['t_gt'])
 
 	d_idx = np.isfinite(y)
 	xi_n, yi_n = x[d_idx], y[d_idx]
@@ -194,7 +194,7 @@ def test_predict_gpr():
 	
 	f_mu = mu_constant(np.mean(yi_n))
 	f_cov= cov.CovSqExpARD()
-	f_cov.set_hyperparam(1,np.array([75]), obs_std)
+	f_cov.set_hyperparam(1,np.array([100]), obs_std)
 
 	gpr = GPR(f_mu, f_cov)
 	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
@@ -219,10 +219,49 @@ def test_train_gpr():
 
 	## optimize for the hyper-parameters:
 	##   initial guess:
+	## t_gt : 2,100,1.0
 	signal_std = 2.0
 	len_scales = np.array([100])
 	obs_std    = 0.5
 	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
+	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
+	resx = np.squeeze(res.x)
+	print "inital    hyperparams : ", th0
+	print "optimized hyperparams : ", resx
+
+	f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1])
+	f_cov.print_hyperparam()
+
+	gpr = GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xi_n, yi_n, x)
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+
+	plot_gpr(x,yo_mu, y_std, y_gt)
+
+def test_train_gpr_periodic():
+	"""
+	Test training GPR covariance hyperparameters.
+	"""
+	x = tot_mins
+	y = dcol(colmap['h'])
+	y_gt = dcol(colmap['h_gt'])
+
+	d_idx = np.isfinite(y)
+	xi_n, yi_n = x[d_idx], y[d_idx]
+	x0_m       = x[np.logical_not(d_idx)]
+	
+	f_cov= cov.Periodic()
+	f_mu = mu_constant(np.mean(yi_n))
+
+	## optimize for the hyper-parameters:
+	##   initial guess:
+	## t_gt : 2,100,1.0
+	signal_std = 2.0
+	slope      = 1.0
+	period     = 1000
+	obs_std    = 5.0
+	th0 = np.log(np.r_[signal_std, slope, period, obs_std])
+	
 	"""
 	_, deriv =  f_cov.nll(th0, xi_n, yi_n-f_mu.get_mu(xi_n), True, False)
 	df = []
@@ -239,12 +278,13 @@ def test_train_gpr():
 	print "numerical :", df
 	print "analytical:", deriv
 	"""
+	
 	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
 	resx = np.squeeze(res.x)
 	print "inital    hyperparams : ", th0
 	print "optimized hyperparams : ", resx
 
-	f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1])
+	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
 	f_cov.print_hyperparam()
 
 	gpr = GPR(f_mu, f_cov)
@@ -255,6 +295,7 @@ def test_train_gpr():
 
 #visualize_pandas()
 #test_predict_gpr()
-test_train_gpr()
+#test_train_gpr()
+test_train_gpr_periodic()
 #plt.show()
 #test_sample_gpr()
