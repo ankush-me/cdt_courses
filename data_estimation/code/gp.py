@@ -100,84 +100,6 @@ class mu_constant:
 	def get_mu(self, x):
 		return self.c*np.ones_like(x)
 
-class cov_se:
-	"""
-	The squared exponential covariance function.
-	Works for general n-dimensional data points.
-
-	f(x1,x2) = a^2 * exp(-|| (x1 - x2)./b||^2) + c^2*I
-
-		where,
-			a : signal standard-dev
-			b : dimensionwise unit length
-			c : observation noise standard-dev
-	"""
-	def set_hyperparam(self, a,b,c):
-		"""
-		Set the hyperparameters.
-		"""
-		self.a, self.b, self.c = a,b,c
-
-	def nll(self, x, y, abc=None, grad=False):
-		"""
-		Returns the negative log-likelihood : p(y|x,th),
-		where, abc are the hyper-parameters. 
-			If abc==None, then it uses the self.a,b,c
-			to compute the value and the gradient.
-
-		@params:
-			grad : if TRUE, this function also returns
-				   the partial derivatives of nll w.r.t
-				   each hyper-parameter.
-		"""
-		if abc == None:
-			a,b,c, = self.a, self.b, self. c
-		else:
-			assert len(abc) >= 3, "SqExp Cov : Too few hyper-parameters"
-			a = abc[0], abc[1:-1], abc[-1]
-
-		
-
-
-	def train(self, x_nd, y_nm):
-		"""
-		Find the optimal value of the hyper-parameters a,b 
-		given the training data of length n.
-
-		Uses scipy's optimization function: scipy.optimize.minimize
-		
-		"""
-		pass
-
-	def cov(x1, x2):
-		"""
-		Returns the covariance for two datapoints.
-		"""
-		self._check_params()
-		return self.a2 * np.exp(-self.b2 * nla.norm(x1-x2))
-
-	def get_covmat(self, x_nd, square=True, check_psd=False):
-		"""
-		Returns an nxn PSD covariance matrix as defined by the covariance function f_k
-		at the given input points.
-
-		@params:
-			x_nd   : n d-dimensional row-vectors (input points).
-			square : return a square nxn matrix if true, else return n(n-1)/2 pairwise distances.
-			check_psd : sanity check if the output matrix is PSD.
-		"""
-		self._check_params()
-
-		if x_nd.ndim==1:
-			x_nd = np.atleast_2d(x_nd).T
-
-		dists = ssd.pdist(x_nd, 'sqeuclidean')
-		if square: 
-			K = self.a2 * np.exp(-self.b2 * ssd.squareform(dists))
-			if check_psd:
-				assert (nla.eig(K)[0] >= 0).all(), "Covariance is not PSD."
-			return K
-		else: return self.a2 * np.exp(-self.b2 * dists)
 
 class GPR:
 	"""
@@ -199,12 +121,33 @@ class GPR:
 		"""
 		mu = self.f_mu.get_mu(x_nd)
 		S  = self.f_k.get_covmat(x_nd)
-		S = make_psd(S, p=1e-8, verbose=False)
+		S  = make_psd(S, p=1e-8, verbose=False)
 		return np.random.multivariate_normal(mu, S), S
 
-	def predict(self, x_in, y_in, x_out):
-		pass
 
+	def predict(self, xi_nd, yi_n, x0_md):
+		"""
+		Predict y at xo_md given the {xi_nd, yi_n} data-set,
+		Returns the mean and co-variance of P(y| xi,yi,xo).
+		"""
+		if xi_nd.ndim==1: xi_nd = np.atleast_2d(xi_nd).T
+		if xo_md.ndim==1: xo_md = np.atleast_2d(xo_md).T
+
+		n,d = xi_nd.shape
+		m,e = xo_md.shape
+		assert d==m, "GPR.predict : dimension mismatch."
+
+		x_io = np.r_[xi_nd, xo_md]
+		K = self.f_k.get_covmat(x_io)
+		K_ii, K_io, K_oo = K[:n,:n], K[:n, n:n+m], K[n:n+m, n:n+m]
+
+		Kii_inv = np.linalg.solve(K_ii, np.eye(n))
+
+		mu_i, mu_o = self.f_mu.get_mu(xi_nd), self.f_mu.get_mu(xo_md)
+		mu_cond = mu_o + K_io.T.dot(Kii_inv).dot(yi_n-mu_i)
+		K_cond  = K_oo - K_io.T.dot(Kii_inv).dot(K_io)
+
+		return mu_cond, K_cond
 
 def plot_gpr(x,y,std, ax=None):
 	"""
