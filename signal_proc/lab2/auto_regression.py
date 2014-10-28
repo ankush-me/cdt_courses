@@ -4,14 +4,15 @@ import scipy.io as sio
 
 d = sio.loadmat('fXSamples.mat')
 d = d['x']
-d1 = d[:,0]
-d1 = d1 - np.mean(d1)
+d1 = d[:,0] - np.mean(d[:,0])
+d2 = d[:,1] - np.mean(d[:,1])
 N  = len(d1)
 
 
 def rms(x1,x2):
 	x1,x2 = np.squeeze(x1), np.squeeze(x2)
-	return np.linalg.norm(x1-x2)/np.sqrt(N)
+	ret = np.log(np.linalg.norm(x1-x2)) - np.log(np.sqrt(len(x1)+0.0))
+	return ret
 
 def AR_predict(d,coeffs, names=None, plot=False):
 	"""
@@ -22,10 +23,12 @@ def AR_predict(d,coeffs, names=None, plot=False):
 	for c in coeffs:
 		p = len(c)
 		y_predict = np.convolve(d,c[::-1],mode='valid')
+		y_predict = y_predict[:-1] ## discard the last value because its outside our domain
 		predictions.append(y_predict)
+
 		if plot:
 			series_name = names[i] if names!=None else ""
-			y_gt = d[p-1:]
+			y_gt = d[p:]
 			N = len(y_gt)
 			plt.subplot(2,1,1)
 			if ax1== None:
@@ -77,33 +80,85 @@ def AR_autocorr(d, p):
 		else: return np.sum(d[:-T]*d[T:])/(N-1.0)
 
 	auto_corrs = np.array([get_autocorr(d,i) for i in np.arange(p)])
-	if p!=0: auto_corrs = np.r_[auto_corrs[:0:-1],auto_corrs]
-	
+	if p!=1: auto_corrs = np.r_[auto_corrs[:0:-1],auto_corrs]
+
 	M = np.empty((p,p))
-	for i in xrange(p):
-		M[i,:] = auto_corrs[i:i+p]
-	
+	for i in xrange(p): M[i,:] = auto_corrs[i:i+p]
+
 	return np.linalg.inv(M).dot(np.r_[auto_corrs[p:], get_autocorr(d,p)])
+
+def spectrum(coeff, plot=False):
+	"""
+	coeff : the auto-regression coefficients [a_{p}, a_{p-1},...a_{-1}]
+	"""
+	p = len(coeff)
+	f = np.atleast_2d(np.arange(2000)).T # freq in Hz
+	k = np.atleast_2d(np.arange(1,p+1)).T
+	a = np.atleast_2d(coeff[::-1]).T
+	phi = -2j*np.pi*f.dot(k.T)
+	denom = np.abs(1 + np.exp(phi.dot(a)))
+	P = 1.0/denom
+
+	if plot:
+		plt.plot(f, P, label="Spectrum")
+		plt.legend()
+		plt.show()
+	return P
+
+
+def AR_crosscorr(d, z, p):
+	assert len(d)==len(z)
+	def get_crosscorr(d,z, T):
+		"""
+		Return the auto-correlation matrix for the series d 
+		and its T-shifted version.
+
+		It assumes that d is zero-mean.
+		"""
+		N = len(d)-T
+		assert T < N
+
+		if T==0: return np.sum(d*z)/(N-1.0)
+		elif T>0: return np.sum(d[:-T]*z[T:])/(N-1.0)
+		else: return np.sum(z[:-T]*d[T:])/(N-1.0)
+
+	cross_corrs = np.array([get_crosscorr(d,z,i) for i in np.arange(-p+1,p)])
+	M = np.empty((p,p))
+	for i in xrange(p): M[i,:] = cross_corrs[i:i+p]
+
+	return np.linalg.inv(M).dot(np.r_[cross_corrs[p:], get_crosscorr(d,z,p)])
+
+def plot_spectrum():
+	p = 1000
+	coeffs = AR_autocorr(d1,p=p)
+	spectrum(coeffs, plot=True )
 
 
 def test_AR_predict():
-	coeffs_lstsq    = AR_lstsq(d1,p=1000)
-	coeffs_autocorr = AR_autocorr(d1,p=1000)
+	coeffs_lstsq    = AR_lstsq(d1,p=10)
+	coeffs_autocorr = AR_autocorr(d1,p=10)
+	coeffs_crosscorr = AR_crosscorr(d1,d2,p=10)
 
-	y_p = AR_predict(d1,[coeffs_lstsq, coeffs_autocorr], ["lstsq", "autocorr"], plot=True)
+	y_p = AR_predict(d1,[coeffs_lstsq, coeffs_autocorr, coeffs_crosscorr],
+					 ["lstsq", "autocorr", "crosscorr"], plot=True)
 		
 
 def sweep_p():
-	ps= np.array([1,2,5,10,50,100])
-	err= np.zeros_like(ps)
+	ps= np.array([2,5,10,50,100, 200,500,1000])
+	err= np.zeros(len(ps))
 	for i in xrange(len(ps)):
 		p = ps[i]
-		coeffs = AR_lstsq(d1,p=p)
-		y_p = AR_predict(d1,coeffs)
-		err[i] = rms(y_p, d1[p-1:])
-	plt.plot(ps, err)
+		coeffs = AR_crosscorr(d1,d2,p=p)
+		y_p = AR_predict(d1,[coeffs])
+		err[i] = rms(y_p, d1[p:])
+	plt.plot(ps, np.exp(err))
+	plt.xlabel('p (auto-regression order)')
+	plt.ylabel("error")
 	plt.show()
 
 
-test_AR_predict()
+#test_AR_predict()
+sweep_p()
+#test_AR_predict()
 #AR_autocorr(d1,10)
+#plot_spectrum()
