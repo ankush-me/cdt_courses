@@ -11,17 +11,17 @@
 % ----------------------------------------------------------------------
 %   USAGE:
 %
-%   \documentstyle[12pt]{report}		NOT article!
+%   \documentstyle[12pt]{report}NOT article!
 %   \usepackage{scribe}
 %   ...
 %   \begin{document}
-%   \course{EECS 227} 				optional
-%   \coursetitle{Optimization}	optional
-%   \semester{Fall 2004}			optional
-%   \lecturer{Jeff Erickson}			optional
-%   \scribe{Joe. A Student}			required
-%   \lecturenumber{17}				required (must be a number)
-%   \lecturedate{October 12}			required (omit year)
+%   \course{EECS 227} optional
+%   \coursetitle{Optimization}optional
+%   \semester{Fall 2004}optional
+%   \lecturer{Jeff Erickson}optional
+%   \scribe{Joe. A Student}required
+%   \lecturenumber{17}required (must be a number)
+%   \lecturedate{October 12}required (omit year)
 %   \maketitle
 % ----------------------------------------------------------------------
 %   The stuff before \maketitle can be in any order, but it has to go
@@ -43,13 +43,13 @@
 \RequirePackage{amsmath,amssymb}
 
 \def\course#1{\def\@course{#1}}
-\course{CS 189}
+\course{A, Gupta}
 
 \def\coursetitle#1{\def\@coursetitle{#1}}
-\coursetitle{Introduction to Machine Learning}
+\coursetitle{Data Estimation and Inference}
 
 \def\semester#1{\def\@semester{#1}}
-\semester{Spring 2014}
+\semester{Michaelmas 2014}
 
 \def\lecturer#1{\def\@lecturer{#1}}
 \lecturer{}
@@ -67,18 +67,18 @@
 \def\maketitle
 {
 \def\@oddhead{\underline{\hbox to\textwidth{\textbf{%
-	\rlap{\@course\phantom{()}}\hfil
-	Homework~\@hwnumber~--- Due \@duedate
-	\hfil\llap{\@semester}}}}}
+        \rlap{\@course\phantom{()}}\hfil
+Data Estimation and Inference, CDT AIMS
+\hfil\llap{\@semester}}}}}
 \def\@oddfoot{\hfil\@hwnumber-\thepage\hfil}
 \def\ps@myfirst{\ps@plain\def\@oddfoot{\hfil\@hwnumber-\thepage\hfil}}
 \thispagestyle{myfirst}
 \noindent
 \framebox[\textwidth]{\vbox to 0.75in{
-\hbox to\textwidth{~\textbf{\rlap{\@course: \@coursetitle\xxx}
-	\hfil\llap{\@semester}}~}
+\hbox to\textwidth{~\textbf{\rlap{\@coursetitle\xxx}
+    \hfil\llap{\@semester}}~}
 \vss
-\hbox to \textwidth{\Large\hfill Homework \@hwnumber~--- Due \@duedate\hfill}
+\hbox to \textwidth{\Large\hfill Gaussian Process Regression\hfill}
 \vss
 \hbox to \textwidth{~\textsl{\rlap{Student: \@scribe}\hfill}~}
 }}
@@ -132,8 +132,8 @@
 
 % ----------------------------------------------------------------------
 %  Make captions smaller than the text, make their titles bold.
-%  Arguments:   #1 == figure name: "Figure 5"
-%               #2 == caption: "Papers by \Erdos, 1900--2000 (projected)"
+%  Arguments:   #1 == figure name: ``Figure 5''
+%               #2 == caption: ``Papers by \Erdos, 1900--2000 (projected)''
 %  Put less space after floats, since captions are smaller
 % ----------------------------------------------------------------------
 \long\def\@makecaption#1#2{
