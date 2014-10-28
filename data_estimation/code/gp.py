@@ -31,12 +31,6 @@ def dcol(i):
 	"""
 	return np.array(d[d.columns[i]])
 
-def visualize_pandas():
-	t_ser = pd.Series(dcol(colmap['h']).values, dcol(2))
-	t_gt_ser= pd.Series(dcol(colmap['h_gt']).values, dcol(2))
-	t_gt_ser.plot()
-	t_ser.plot(style='.')
-
 def viz():
 	##  visualize the data:
 	plt.subplot(2,1,1)
@@ -382,8 +376,8 @@ def generate_plots():
 	
 	f_cov= cov.CovSqExpARD()
 	f_mu = cov.mu_constant(np.mean(yi_n))
-	signal_std = 2.0
-	len_scales = np.array([100])
+	signal_std = 0.5
+	len_scales = np.array([120])
 	obs_std    = 1.0
 	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
 	res  = f_cov.train(th0, xi_n, yi_n-f_mu.get_mu(xi_n)) 
@@ -493,14 +487,24 @@ def test_train_gpr_product():
 	plot_gpr(x,yo_mu, y_std, y_gt)
 
 
-
-#visualize_pandas()
-#test_predict_gpr()
-#test_train_gpr()
-#test_train_gpr_periodic()
-#generate_plots()
-#plot_nll()
-seq_predict()
-#test_train_gpr_product()
-#plt.show()
+### Sanity check : test sampling from a GP:
 #test_sample_gpr()
+
+### Predict the output for temperature-data using hand-tuned hyper-params:
+#test_predict_gpr()
+
+### Predict the out for temperature-data but this time optimizing the
+### hyper-params using marginal likelihood:
+#test_train_gpr()
+
+### Train the hyper-parameters for periodic covariance on the tide-data:
+#test_train_gpr_periodic()
+
+### Plot the negative-log-likelihood figure used in the report:
+#plot_nll()
+
+### Do sequential predictions:
+#seq_predict()
+
+### convenience function for generating various plots:
+#generate_plots()

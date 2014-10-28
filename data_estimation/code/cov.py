@@ -235,7 +235,7 @@ class CovSqExpARD:
 		print "Optimizing hyper-parameters using conjugate gradient :"
 		res = opt.minimize(self.nll, th0, args=(x_nd, y_n,True,False),
 						   method='CG', jac=True,
-						   options={'maxiter':20, 'disp':False})
+						   options={'maxiter':30, 'disp':False})
 		return res
 
 
