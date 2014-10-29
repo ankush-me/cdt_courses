@@ -42,7 +42,6 @@ def load_kf1D():
 def v2d(x):
 	return np.atleast_2d(x).T
 
-
 def AR_predict(d,coeffs, name="", plot=False):
 	"""
 	Plot the auto-regression predictions and the actual data.
@@ -89,8 +88,8 @@ def autoregression_kf(p=100):
 	V[:,0] = np.diag(S)
 
 	for t in xrange(T-1):
-		B_t = v2d(s[t:p+t]).T
-		o_t = v2d(s[p+1+t])
+		B_t = v2d(s_n[t:p+t]).T
+		o_t = v2d(s_n[p+1+t])
 		wT,ST = kf.time_update(v2d(W[:,t]), S, A, R)
 		wO, S = kf.observation_update(wT, ST, o_t, B_t, Q)
 		W[:,t+1] = np.squeeze(wO)
@@ -99,7 +98,7 @@ def autoregression_kf(p=100):
 	w_final = W[:,-1]
 	V = np.sqrt(V)
 
-	s_predict = AR_predict(s, np.squeeze(w_final) ,plot=False)
+	s_predict = AR_predict(s_n, np.squeeze(w_final) ,plot=False)
 	plt.subplot(2,1,1)
 	plt.plot(ts,s,'g', label="true signal")
 	plt.plot(ts[p:],s_predict, 'r', label="predicted signal")
@@ -113,8 +112,19 @@ def autoregression_kf(p=100):
 
 	plt.show()
 
-autoregression_kf(p=25)
+def boat_racing():
+	d = sio.loadmat('kf2d_signal.mat')
+	t_n,x_n,y_n = np.squeeze(d['t_n']), np.squeeze(d['x_n']), np.squeeze(d['y_n'])
+	t ,x ,y     = np.squeeze(d['t']), np.squeeze(d['x']), np.squeeze(d['y'])
 
+	plt.scatter(x_n, y_n, c=t_n, edgecolors='none')
+	plt.plot(x,y)
+	plt.colorbar()
+	plt.show()
+
+
+#autoregression_kf(p=25)
+boat_racing()
 
 
 
