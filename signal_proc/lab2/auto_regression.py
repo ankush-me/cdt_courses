@@ -1,8 +1,9 @@
+import sys, os
 import numpy as np 
 import matplotlib.pylab as plt
 import scipy.io as sio
 
-d = sio.loadmat('fXSamples.mat')
+d = sio.loadmat('/Users/ankushgupta/cdt_courses/signal_proc/lab2/fXSamples.mat')
 d = d['x']
 d1 = d[:,0] - np.mean(d[:,0])
 d2 = d[:,1] - np.mean(d[:,1])
@@ -158,7 +159,7 @@ def sweep_p():
 
 
 #test_AR_predict()
-sweep_p()
+#sweep_p()
 #test_AR_predict()
 #AR_autocorr(d1,10)
 #plot_spectrum()
