@@ -89,8 +89,8 @@ def autoregression_kf(p=100):
 	V[:,0] = np.diag(S)
 
 	for t in xrange(T-1):
-		B_t = v2d(s_n[t:p+t]).T
-		o_t = v2d(s_n[p+1+t])
+		B_t = v2d(s[t:p+t]).T
+		o_t = v2d(s[p+1+t])
 		wT,ST = kf.time_update(v2d(W[:,t]), S, A, R)
 		wO, S = kf.observation_update(wT, ST, o_t, B_t, Q)
 		W[:,t+1] = np.squeeze(wO)
@@ -99,7 +99,7 @@ def autoregression_kf(p=100):
 	w_final = W[:,-1]
 	V = np.sqrt(V)
 
-	s_predict = AR_predict(s_n, np.squeeze(w_final) ,plot=False)
+	s_predict = AR_predict(s, np.squeeze(w_final) ,plot=False)
 	plt.subplot(2,1,1)
 	plt.plot(ts,s,'g', label="true signal")
 	plt.plot(ts[p:],s_predict, 'r', label="predicted signal")
