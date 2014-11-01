@@ -120,6 +120,7 @@ def predict_CO2():
 	plt.plot(get_scaled_x(t,M)[N-10:], d_predict[N-10:], label="prediction")
 	plt.plot(t[:n_good], d_fit+c, label="low-passed")
 	plt.legend(loc=4)
+	plt.grid()
 	plt.show()
 
 predict_CO2()
