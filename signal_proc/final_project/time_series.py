@@ -71,7 +71,7 @@ def predict_CO2():
 	t,d = uniformly_sample(t,d,plot=False)
 
 	N = len(d) # samples
-	M = 1.5*len(d) ## number of samples for prediction
+	M = 1.6*len(d) ## number of samples for prediction
 	sin_T = 10 # samples -- obtained visually (just need an estimate)
 	fs = N+0.0 # set the sampling frequency so that total time = 1.0
 	ts = np.arange(N)/(N+0.0) ## time of each sample
@@ -108,7 +108,7 @@ def predict_CO2():
 	plt.subplot(211)
 	plt.plot(fft_abs)
 	plt.stem(np.arange(len(fft_abs))[peaks], np.abs(fft_new)[peaks])
-	plt.legend(("FFT of residual", "clean FFT"))
+	plt.legend(("FFT of residual", "clean FFT"), loc=9)
 	plt.subplot(212)
 	plt.plot(d_res, '--', label="residual")
 	plt.plot(reconstruct_fft(fft_new, len(res_fft)), label="clean residual")
@@ -116,10 +116,10 @@ def predict_CO2():
 	plt.show()
 
 	d_predict += reconstruct_fft(fft_new, M)
-	plt.plot(ts, d, label="actual")
-	plt.plot(get_scaled_x(ts,M), d_predict, label="prediction")
-	plt.plot(ts[:n_good], d_fit+c, label="low-passed")
-	plt.legend()
+	plt.plot(t, d, label="actual")
+	plt.plot(get_scaled_x(t,M)[N-10:], d_predict[N-10:], label="prediction")
+	plt.plot(t[:n_good], d_fit+c, label="low-passed")
+	plt.legend(loc=4)
 	plt.show()
 
 predict_CO2()
