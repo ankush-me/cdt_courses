@@ -11,9 +11,7 @@ ddir = "/Users/ankushgupta/cdt_courses/signal_proc/final_project"
 
 def low_pass(x,  fc, fs):
     """
-    removes high-frequency content from an array X.
-    can be used to smooth out the kalman filter estimates.
-
+    Removes high-frequency content from an array X.
     fs : sampling frequency
     """
     lowcut  = fc   # lower-most freq (Hz)
@@ -28,9 +26,24 @@ def low_pass(x,  fc, fs):
     x_filt = np.squeeze(x_filt)
     return  x_filt
 
+def reconstruct_fft(c_fft, M):
+	"""
+	Reconstructs the signal x while given its coefficients.
+	Can also be used to extrapolate based on the fft by giving
+	an M > len(X).
+
+	c_fft : coefficients of the fft transform of the original signal
+	        == output of np.fft.fft(x)
+	M : number of samples for which to generate the time-series for.
+	"""
+	N = len(c_fft)
+	phi = 2j * np.pi * np.arange(N)/(N+0.0)
+	return np.real(np.exp(np.outer(np.arange(M), phi)).dot(c_fft))/(N+0.0)
+
 def uniformly_sample(x,y, plot=False):
 	"""
-	returns samples sampled at equal intervals on the x-axis.
+	Returns samples sampled at equal intervals on the x-axis.
+	Uses cubic-spline for interpolation.
 	"""
 	n,xmin,xmax = len(x), np.min(x), np.max(x)
 	x_n = np.linspace(xmin,xmax,n)
@@ -44,6 +57,7 @@ def uniformly_sample(x,y, plot=False):
 		plt.show()
 	return x_n,y_n
 
+
 def predict_CO2():
 	"""
 	Time series prediction for CO2 data
@@ -54,6 +68,7 @@ def predict_CO2():
 	t,d = uniformly_sample(t,d,plot=False)
 
 	N = len(d) # samples
+	M = 1.5*len(d) ## number of samples for prediction
 	sin_T = 10 # samples -- obtained visually (just need an estimate)
 	fs = N+0.0 # set the sampling frequency so that total time = 1.0
 	ts = np.arange(N)/(N+0.0) ## time of each sample
@@ -76,15 +91,15 @@ def predict_CO2():
 	## polynomial fit:
 	## regress on the polynomial basis : 1,x,x^2,x^3,..
 	p = np.polyfit(xp,dp,2)
-	d_predict = np.polyval(p,np.arange(N)) + c
+	d_predict = np.polyval(p,np.arange(M)) + c
 	
-	d_res = d-d_predict
-	ff = np.fft.fft(d_res)
-	plt.plot(np.abs(ff))
+	d_res = d-d_predict[:N]
+	res_fft = np.fft.fft(d_res)
 
-	plt.plot(d_res)
-	
-	#plt.plot(c*d_fit)	
+	d_predict += reconstruct_fft(res_fft, M)
+	plt.plot(d, label="actual")
+	plt.plot(d_predict, label="prediction")
+	plt.legend()
 	plt.show()
 
 predict_CO2()
