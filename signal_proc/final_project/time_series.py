@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.io as sio
 from scipy import interpolate
 import os.path as osp
-from scipy.signal import butter, filtfilt
+from scipy.signal import butter, filtfilt, find_peaks_cwt
 
 
 ddir = "/Users/ankushgupta/cdt_courses/signal_proc/final_project"
@@ -93,12 +93,29 @@ def predict_CO2():
 	p = np.polyfit(xp,dp,2)
 	d_predict = np.polyval(p,np.arange(M)) + c
 	
+	## fit a pure-tone to the residual:
 	d_res = d-d_predict[:N]
 	res_fft = np.fft.fft(d_res)
+	fft_abs = np.abs(res_fft)
+	peaks   = np.arange(len(res_fft))[np.abs(fft_abs-np.max(fft_abs))<1e-2]
+	fft_new = np.zeros(len(res_fft), dtype='complex')
+	power   =  np.sum(fft_abs)
+	fft_new[peaks] = 1.5*res_fft[peaks]
 
-	d_predict += reconstruct_fft(res_fft, M)
+	plt.subplot(211)
+	plt.plot(fft_abs)
+	plt.stem(np.arange(len(fft_abs))[peaks], np.abs(fft_new)[peaks])
+	plt.legend(("FFT of residual", "clean FFT"))
+	plt.subplot(212)
+	plt.plot(d_res, '--', label="residual")
+	plt.plot(reconstruct_fft(fft_new, len(res_fft)), label="clean residual")
+	plt.legend()
+	plt.show()
+
+	d_predict += reconstruct_fft(fft_new, M)
 	plt.plot(d, label="actual")
 	plt.plot(d_predict, label="prediction")
+	plt.plot(d_fit+c, label="low-passed")
 	plt.legend()
 	plt.show()
 
