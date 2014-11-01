@@ -57,6 +57,9 @@ def uniformly_sample(x,y, plot=False):
 		plt.show()
 	return x_n,y_n
 
+def get_scaled_x(x0, N):
+	alpha, beta = x0[0], x0[1]-x0[0]
+	return alpha + beta*np.arange(N)
 
 def predict_CO2():
 	"""
@@ -113,9 +116,9 @@ def predict_CO2():
 	plt.show()
 
 	d_predict += reconstruct_fft(fft_new, M)
-	plt.plot(d, label="actual")
-	plt.plot(d_predict, label="prediction")
-	plt.plot(d_fit+c, label="low-passed")
+	plt.plot(ts, d, label="actual")
+	plt.plot(get_scaled_x(ts,M), d_predict, label="prediction")
+	plt.plot(ts[:n_good], d_fit+c, label="low-passed")
 	plt.legend()
 	plt.show()
 
