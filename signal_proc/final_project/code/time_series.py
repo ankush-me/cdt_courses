@@ -124,9 +124,11 @@ def predict_CO2():
 	plt.show()
 
 
-def predict_sunspots():
+def predict_sunspots(p=100):
 	"""
-	Time series prediction for Sunspots data.
+	Time series prediction for Sunspots data using linear 
+	auto-regressive model.
+		p : is the model order.
 	"""
 	dfname = osp.join(ddir,"sunspots.mat")
 	d = sio.loadmat(dfname)
@@ -136,8 +138,7 @@ def predict_sunspots():
 	id_1990 = int(np.nonzero(t==1990)[0])
 	t_train, d_train, t_test, d_test = t[:id_1990], d[:id_1990], t[id_1990:], d[id_1990:]
 
-	p =3
-	coeffs_autocorr = AR_autocorr(d_train,p=p)
+	coeffs_autocorr = AR_lstsq(d,p=p)
 
 	def rolling_regression(dd, c, n_predict=12):
 		"""
@@ -163,8 +164,8 @@ def predict_sunspots():
 	for i in xrange(n_predict_years):
 		n_predict = min(len(t_pred)-12*(i), 12)
 		t_idx = t_pred_idx+i*12
-		d_pred[i*12:i*12+n_predict] = rolling_regression(d[t_idx-p:t_idx], coeffs_autocorr, n_predict)
-
+		d_pred[i*12:i*12+n_predict] = rolling_regression(d[t_idx-p:t_idx].copy(), coeffs_autocorr, n_predict)
+	
 
 	corr = fftconvolve(d[t_pred_idx:], d_pred[::-1], mode='full')
 	i_mid = (len(corr))/2
@@ -172,48 +173,46 @@ def predict_sunspots():
 	di_step = (i_peak-i_mid)
 	print "need to adjust by = %d, p=%d"%(di_step, p)
 	di = di_step*(t[1]-t[0])
+
 	plt.plot(corr)
-	plt.scatter([i_mid], [corr[i_mid]], c='g', label="mid")
+	plt.scatter([i_mid], [corr[i_mid]], c='g', label="mid (ideal peak)")
 	plt.scatter([i_peak], [corr[i_peak]], c='r', label="peak")
+	plt.title("Cross-Correlation b/w Ground-Truth & Predicted Sunspot Data for Lag Detection")
+	plt.legend()
+	plt.show()
+	
+	plt.plot(t_train, d_mu+d_train, 'b-.', label="ground truth (train)")
+	plt.plot(t_test,  d_mu+d_test, 'r-.', label="ground truth (test)")
+	plt.plot(t_pred,  d_mu+d_pred, 'g', label="prediction")
+	plt.title("Sunspot Prediction Using %d-Linear Auto-regressive Model AR(%d)"%(p,p))
+	plt.xlabel("year")
+	plt.ylabel("activity")
 	plt.legend()
 	plt.show()
 
 
-	plt.subplot(211)
-	plt.plot(t, d, 'b-.', label="ground truth")
-	plt.plot(t_pred, d_pred, 'g', label="prediction")
-	plt.legend()
-	plt.subplot(212)
-	plt.plot(coeffs_autocorr)
-	plt.title("auto-correlation coefficients")
-	plt.show()
-
-def sweep_p():
+def sweep_p_ss():
 	dfname = osp.join(ddir,"sunspots.mat")
 	d = sio.loadmat(dfname)
 	t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
-	#ps= np.array([2,5,10,50,100, 200,500,1000])
-	ps = np.array([1,10,100])
+	ps= np.array([2,5,10,15,20,50,70,100,150,200,250,300,400,500,600])
 	err= np.zeros(len(ps))
 	ys = []
 	for i in xrange(len(ps)):
 		p = ps[i]
 		coeffs = AR_autocorr(d,p=p)
-		y_p = AR_predict(d,[coeffs])[0]
+		y_p, dgt = predict_sunspots(p=p)
 		ys.append(y_p)
-		err[i] = rms(y_p, d[p:])
+		err[i] = rms(y_p, dgt)
 
-	for i in xrange(len(ps)):
-		plt.plot(np.arange(len(d))[ps[i]:], ys[i], label="p=%d"%ps[i])
-	plt.legend()
-	plt.show()
-	plt.plot(ps, np.exp(err))
+	plt.plot(ps, np.exp(err), marker='.')
 	plt.xlabel('p (auto-regression order)')
-	plt.ylabel("error")
+	plt.ylabel("rms error")
+	plt.title("Sunspots Auto-Regression Error Vs. Model Order")
 	plt.show()
 
 
 #predict_CO2()
-#predict_sunspots()
-sweep_p()
+predict_sunspots(p=15)
+#sweep_p_ss()
 

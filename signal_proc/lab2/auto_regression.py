@@ -136,9 +136,9 @@ def plot_spectrum():
 
 
 def test_AR_predict():
-	coeffs_lstsq    = AR_lstsq(d1,p=10)
-	coeffs_autocorr = AR_autocorr(d1,p=10)
-	coeffs_crosscorr = AR_crosscorr(d1,d2,p=10)
+	coeffs_lstsq    = AR_lstsq(d1,p=100)
+	coeffs_autocorr = AR_autocorr(d1,p=100)
+	coeffs_crosscorr = AR_crosscorr(d1,d2,p=100)
 
 	y_p = AR_predict(d1,[coeffs_lstsq, coeffs_autocorr, coeffs_crosscorr],
 					 ["lstsq", "autocorr", "crosscorr"], plot=True)
@@ -160,6 +160,6 @@ def sweep_p():
 
 #test_AR_predict()
 #sweep_p()
-#test_AR_predict()
+test_AR_predict()
 #AR_autocorr(d1,10)
 #plot_spectrum()
