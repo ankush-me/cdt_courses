@@ -321,8 +321,13 @@ class Periodic:
 
 		## compute the determinant using LU factorization:
 		sign, log_det = nla.slogdet(K_n)
+		#try:
 		assert sign > 0, "Periodic Cov : covariance matrix is not PSD."
-		
+		#except:
+		#	K_n += np.eye(len(K_n))
+		#	sign, log_det = nla.slogdet(K_n)
+		#	print sign, log_det
+
 		## compute the inverse of the covariance matrix through gaussian
 		## elimination:
 		K_inv = nla.solve(K_n, np.eye(N))

@@ -4,7 +4,9 @@ import scipy.io as sio
 from scipy import interpolate
 import os.path as osp
 from scipy.signal import butter, filtfilt, find_peaks_cwt, fftconvolve
+
 from auto_regression import *
+import cov, gp ## GPR code
 
 ddir = "/Users/ankushgupta/cdt_courses/signal_proc/final_project/data"
 
@@ -133,10 +135,81 @@ def predict_CO2(return_full=False, plot=False):
 		plt.show()
 
 	if return_full:
+		print "c: ",c
 		return d_predict, d, d_fit+c, p
 	else:
 		return d_predict, d
 
+class mu_poly:
+	"""
+	Class for returning the mean for a G.P. defined by
+	a polynomial basis : mu(x) = a0 + a1*x + a2*x^2 + ...
+
+	@params:
+		p : coefficients of the polynomial basis : higest degree first.
+	"""
+	def __init__(self, p):
+		self.p = p
+
+	def get_mu(self,x):
+		return np.polyval(self.p, x)
+
+def predict_CO2_gp():
+	"""
+	Predict CO2 data using periodic covariance Gaussian Process Regression.
+	"""
+	dfname = osp.join(ddir,"co2.mat")
+	d      = sio.loadmat(dfname)
+	t,d = np.squeeze(d['year']), np.squeeze(d['co2'])
+	t,d = uniformly_sample(t,d,plot=False)
+
+	_,_,d_fit,p = predict_CO2(return_full=True, plot=False)
+	c = d_fit[0]
+
+	d = d-c
+	f_mu = mu_poly(p)
+
+	"""
+	f_cov= cov.CovSqExpARD()
+	signal_std = 0.5
+	len_scales = np.array([10])
+	obs_std    = 0.02 
+	th0 = np.log(np.r_[signal_std, len_scales, obs_std])
+	"""
+	## optimize for the hyper-parameters:
+	##   initial guess:
+	f_cov= cov.Periodic()
+	signal_std = 5.0
+	slope      = 35.0
+	period     = 100.08
+	obs_std    = 0.5
+	th0 = np.log(np.r_[signal_std, slope, period, obs_std])
+	xs = np.arange(len(d))
+	ys = d - f_mu.get_mu(xs)
+	xs_new = np.arange(len(d)/2, 1.5*len(d))
+	
+	#res  = f_cov.train(th0, xs, d-f_mu.get_mu(xs)) 
+	#resx = np.squeeze(res.x)
+	resx = th0
+	print "inital    hyperparams : ", th0
+	print "optimized hyperparams : ", resx
+
+	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
+	#f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1])
+	f_cov.print_hyperparam()
+
+	gpr = gp.GPR(f_mu, f_cov)
+	yo_mu, yo_S = gpr.predict(xs, d, xs_new.copy())
+	y_std = np.atleast_2d(np.sqrt(np.diag(yo_S))).T
+
+	fi = np.isfinite(y_std)
+	yf = y_std[fi]
+	xf = (np.atleast_2d(np.arange(len(y_std))).T)[fi]
+	y_std = np.interp(np.arange(len(y_std)), xf, yf)
+	y_std = np.atleast_2d(y_std).T
+
+	gp.plot_gpr(get_scaled_x(t,len(yo_mu))+(t[1]-t[0])*xs_new[0],c+yo_mu, y_std, [get_scaled_x(t,len(d)),d+c],
+				xlabel="years", ylabel="CO2 Levels", title="Predicted CO2 Levels (G.P.)")
 
 
 def predict_sunspots(p=100):
@@ -189,22 +262,24 @@ def predict_sunspots(p=100):
 	print "need to adjust by = %d, p=%d"%(di_step, p)
 	di = di_step*(t[1]-t[0])
 
-	plt.plot(corr)
-	plt.scatter([i_mid], [corr[i_mid]], c='g', label="mid (ideal peak)")
-	plt.scatter([i_peak], [corr[i_peak]], c='r', label="peak")
-	plt.title("Cross-Correlation b/w Ground-Truth & Predicted Sunspot Data for Lag Detection")
-	plt.legend()
-	plt.show()
-	
-	plt.plot(t_train, d_mu+d_train, 'b-.', label="ground truth (train)")
-	plt.plot(t_test,  d_mu+d_test, 'r-.', label="ground truth (test)")
-	plt.plot(t_pred,  d_mu+d_pred, 'g', label="prediction")
-	plt.title("Sunspot Prediction Using %d-Linear Auto-regressive Model AR(%d)"%(p,p))
-	plt.xlabel("year")
-	plt.ylabel("activity")
-	plt.legend()
-	plt.show()
+	if plot:
+		plt.plot(corr)
+		plt.scatter([i_mid], [corr[i_mid]], c='g', label="mid (ideal peak)")
+		plt.scatter([i_peak], [corr[i_peak]], c='r', label="peak")
+		plt.title("Cross-Correlation b/w Ground-Truth & Predicted Sunspot Data for Lag Detection")
+		plt.legend()
+		plt.show()
+		
+		plt.plot(t_train, d_mu+d_train, 'b-.', label="ground truth (train)")
+		plt.plot(t_test,  d_mu+d_test, 'r-.', label="ground truth (test)")
+		plt.plot(t_pred,  d_mu+d_pred, 'g', label="prediction")
+		plt.title("Sunspot Prediction Using %d-Linear Auto-regressive Model AR(%d)"%(p,p))
+		plt.xlabel("year")
+		plt.ylabel("activity")
+		plt.legend()
+		plt.show()
 
+	return d_train+d_mu, d+d_mu
 
 def sweep_p_ss():
 	dfname = osp.join(ddir,"sunspots.mat")
@@ -227,7 +302,7 @@ def sweep_p_ss():
 	plt.show()
 
 
-predict_CO2(return_full=False, plot=True)
+predict_CO2_gp()
 #predict_sunspots(p=15)
 #sweep_p_ss()
 

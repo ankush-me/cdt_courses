@@ -106,7 +106,7 @@ class GPR:
 
 		return mu_cond, K_cond
 
-def plot_gpr(x,y,std, y_gt=None, xlabel=None, ylabel=None, title=None, ax=None, y_obs=None):
+def plot_gpr(x,y,std, xy_gt=None, xlabel=None, ylabel=None, title=None, ax=None, y_obs=None):
 	"""
 	plot (x,y) with std being the standard deviation.
 	ax : matplotlib axis
@@ -119,12 +119,12 @@ def plot_gpr(x,y,std, y_gt=None, xlabel=None, ylabel=None, title=None, ax=None, 
 	ax.fill_between(x, y+std, y-std, alpha=0.2, facecolor='r')
 	ax.fill_between(x, y+2*std, y-2*std, alpha=0.2, facecolor='r')
 	ax.plot(x,y,'0.40', linewidth=2, label='prediction')
-	if y_gt!=None: ax.plot(x[:len(y_gt)],y_gt,'g.',label='ground truth')
+	if xy_gt!=None: ax.plot(xy_gt[0],xy_gt[1],'g',label='ground truth', lw=2.0)
 	if y_obs!=None: ax.plot(x, y_obs, 'r.', label='observation')
 	if xlabel!=None: plt.xlabel(xlabel)
 	if ylabel!=None: plt.ylabel(ylabel)
 	if title!=None : plt.title(title)
-	plt.legend()
+	plt.legend(loc=4)
 	plt.show()
 
 def test_sample_gpr():
