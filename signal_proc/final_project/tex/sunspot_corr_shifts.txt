@@ -1,0 +1,18 @@
+Sunspot Correlation Shift:
+==========================
+
+need to adjust by = -5, p=2
+need to adjust by = -6, p=5
+need to adjust by = -6, p=10
+need to adjust by = -6, p=15
+need to adjust by = -5, p=20
+need to adjust by = -4, p=50
+need to adjust by = -4, p=70
+need to adjust by = -4, p=100
+need to adjust by = -4, p=150
+need to adjust by = -3, p=200
+need to adjust by = -3, p=250
+need to adjust by = -3, p=300
+need to adjust by = 0, p=400
+need to adjust by = 0, p=500
+need to adjust by = 0, p=600
