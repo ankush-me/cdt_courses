@@ -286,7 +286,7 @@ def predict_sunspots(p=100):
     return d_train+d_mu, d+d_mu
 
 
-def train_regressive_nn(d, p=15, epochs=10, alpha=0.1):
+def train_regressive_nn(d, p=15, epochs=10, alpha=1.0):
     """
     Train a neural-net for regression with:
         p input units
@@ -378,13 +378,14 @@ def predict_sunspots_nn(p=15, plot=True):
     dfname = osp.join(ddir,"sunspots.mat")
     d = sio.loadmat(dfname)
     t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
-    d_mu, d_std = np.mean(d), np.std(d)
-    d = (d - d_mu)/d_std ## normalize the data
+    d_mu, d_max = np.mean(d), np.max(d)
+    d = (d - d_mu)/d_max ## normalize the data
 
     id_1990 = int(np.nonzero(t==1990)[0])
     t_train, d_train, t_test, d_test = t[:id_1990], d[:id_1990], t[id_1990:], d[id_1990:]
 
     nn = train_regressive_nn(d,p=p,epochs=1000)
+    print
 
     def rolling_regression(dd, NN,  n_predict=12):
         """
@@ -394,8 +395,7 @@ def predict_sunspots_nn(p=15, plot=True):
         yout = np.empty(n_predict)
         y_prev = dd
         for i in xrange(n_predict):
-            x = NN.classify(y_prev,regress=True)
-            yout[i] = x 
+            yout[i] = NN.classify(y_prev,regress=True)
             y_prev[:-1] = y_prev[1:]
             y_prev[-1]  = yout[i]
         return yout
@@ -424,9 +424,13 @@ def predict_sunspots_nn(p=15, plot=True):
         plt.legend()
         plt.show()
         
-        plt.plot(t_train, d_mu+d_train, 'b-.', label="ground truth (train)")
-        plt.plot(t_test,  d_mu+d_test, 'r-.', label="ground truth (test)")
-        plt.plot(t_pred,  d_mu+d_pred, 'g', label="prediction")
+        d_test = d_test*d_max+d_mu
+        d_train = d_train*d_max+d_mu
+        d_pred = d_pred*d_max+d_mu
+
+        plt.plot(t_train, d_train, 'b-.', label="ground truth (train)")
+        plt.plot(t_test,  d_test, 'r-.', label="ground truth (test)")
+        plt.plot(t_pred,  d_pred, 'g', label="prediction")
         plt.title("Sunspot Prediction Using %d-Linear Auto-regressive Model AR(%d)"%(p,p))
         plt.xlabel("year")
         plt.ylabel("activity")
@@ -458,6 +462,6 @@ def sweep_p_ss():
 
 
 #predict_CO2_gp()
-predict_sunspots_nn(p=15)
+predict_sunspots_nn(p=100)
 #sweep_p_ss()
 
