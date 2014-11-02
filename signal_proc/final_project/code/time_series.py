@@ -216,7 +216,7 @@ def predict_CO2_gp():
                 xlabel="years", ylabel="CO2 Levels", title="Predicted CO2 Levels (G.P.)")
 
 
-def predict_sunspots(p=100):
+def predict_sunspots(p=100, plot=True):
     """
     Time series prediction for Sunspots data using linear 
     auto-regressive model.
@@ -283,10 +283,10 @@ def predict_sunspots(p=100):
         plt.legend()
         plt.show()
 
-    return d_train+d_mu, d+d_mu
+    return d_pred+d_mu, (d+d_mu)[t_pred_idx:]
 
 
-def train_regressive_nn(d, p=15, epochs=10, alpha=1.0):
+def train_regressive_nn(d, p=15, epochs=10, alpha=0.5):
     """
     Train a neural-net for regression with:
         p input units
@@ -297,7 +297,7 @@ def train_regressive_nn(d, p=15, epochs=10, alpha=1.0):
     ndat = p*((len(d)-p)/p)-p
     x_train = np.empty((ndat, p))
     for i in xrange(ndat):
-        x_train[i,:] = d[p+i:p+i+p]
+        x_train[i,:] = d[i:p+i]
     y_train =  np.atleast_2d(d[p:p+ndat]).T
     assert x_train.shape[0]==y_train.shape[0]
 
@@ -367,10 +367,11 @@ def train_regressive_nn(d, p=15, epochs=10, alpha=1.0):
         cp.dump({'train_error':train_error,
                  'obj_error':obj_error,
                  'time': run_time}, open(fname_str,'w'))
+    print
     return NN
 
 
-def predict_sunspots_nn(p=15, plot=True):
+def predict_sunspots_nn(p, epochs=100, alpha=0.1, plot=True):
     """
     Predict sunspot data using neural-nets (feed-forward).
     Uses last 'p' values as inputs to the NN.
@@ -384,10 +385,9 @@ def predict_sunspots_nn(p=15, plot=True):
     id_1990 = int(np.nonzero(t==1990)[0])
     t_train, d_train, t_test, d_test = t[:id_1990], d[:id_1990], t[id_1990:], d[id_1990:]
 
-    nn = train_regressive_nn(d,p=p,epochs=1000)
-    print
+    nn = train_regressive_nn(d,p=p,epochs=epochs, alpha=alpha)
 
-    def rolling_regression(dd, NN,  n_predict=12):
+    def rolling_regression_nn(dd, NN,  n_predict=12):
         """
         Return n_predictions into the future, given
         d entries from the past and the neural-net NN.
@@ -395,7 +395,7 @@ def predict_sunspots_nn(p=15, plot=True):
         yout = np.empty(n_predict)
         y_prev = dd
         for i in xrange(n_predict):
-            yout[i] = NN.classify(y_prev,regress=True)
+            yout[i] = NN.classify(y_prev,regress=True).copy()
             y_prev[:-1] = y_prev[1:]
             y_prev[-1]  = yout[i]
         return yout
@@ -407,7 +407,7 @@ def predict_sunspots_nn(p=15, plot=True):
     for i in xrange(n_predict_years):
         n_predict = min(len(t_pred)-12*(i), 12)
         t_idx = t_pred_idx+i*12
-        d_pred[i*12:i*12+n_predict] = rolling_regression(d[t_idx-p:t_idx].copy(), nn, n_predict)
+        d_pred[i*12:i*12+n_predict] = rolling_regression_nn(d[t_idx-p:t_idx].copy(), nn, n_predict)
 
     corr = fftconvolve(d[t_pred_idx:], d_pred[::-1], mode='full')
     i_mid = (len(corr))/2
@@ -415,6 +415,9 @@ def predict_sunspots_nn(p=15, plot=True):
     di_step = (i_peak-i_mid)
     print "need to adjust by = %d, p=%d"%(di_step, p)
     di = di_step*(t[1]-t[0])
+
+    d_pred  = d_pred*d_max+d_mu
+    d       = d*d_max + d_mu
 
     if plot:
         plt.plot(corr)
@@ -424,44 +427,50 @@ def predict_sunspots_nn(p=15, plot=True):
         plt.legend()
         plt.show()
         
-        d_test = d_test*d_max+d_mu
+        d_test  = d_test*d_max+d_mu
         d_train = d_train*d_max+d_mu
-        d_pred = d_pred*d_max+d_mu
-
+        
         plt.plot(t_train, d_train, 'b-.', label="ground truth (train)")
         plt.plot(t_test,  d_test, 'r-.', label="ground truth (test)")
         plt.plot(t_pred,  d_pred, 'g', label="prediction")
-        plt.title("Sunspot Prediction Using %d-Linear Auto-regressive Model AR(%d)"%(p,p))
+        plt.title("Sunspot Prediction Using %d-Sample Lagged Feed-Forward Neural Net"%p)
         plt.xlabel("year")
         plt.ylabel("activity")
         plt.legend()
         plt.show()
 
-    return d_train+d_mu, d+d_mu
+    return d_pred, d[t_pred_idx:]
 
 
-def sweep_p_ss():
+def sweep_p_ss(nn=False):
     dfname = osp.join(ddir,"sunspots.mat")
     d = sio.loadmat(dfname)
     t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
-    ps= np.array([2,5,10,15,20,50,70,100,150,200,250,300,400,500,600])
+    #ps= np.array([2,5,10,15,20,50,70,100,150,200,250,300,400,500,600])
+    ps= np.array([2,5,10,15,20,50,70,100,150,200])
     err= np.zeros(len(ps))
     ys = []
     for i in xrange(len(ps)):
         p = ps[i]
-        coeffs = AR_autocorr(d,p=p)
-        y_p, dgt = predict_sunspots(p=p)
+        if nn:
+            y_p, dgt = predict_sunspots_nn(p, epochs=500, alpha=0.3, plot=False)
+        else:
+            coeffs = AR_autocorr(d,p=p)
+            y_p, dgt = predict_sunspots(p=p)
         ys.append(y_p)
         err[i] = rms(y_p, dgt)
 
     plt.plot(ps, np.exp(err), marker='.')
     plt.xlabel('p (auto-regression order)')
     plt.ylabel("rms error")
-    plt.title("Sunspots Auto-Regression Error Vs. Model Order")
+    if nn:
+        ptitle = "Sunspots Neunal Net Error Vs. Model Order"
+    else: ptitle = "Sunspots Auto-Regression Error Vs. Model Order"
+    plt.title(ptitle)
     plt.show()
 
 
 #predict_CO2_gp()
-predict_sunspots_nn(p=100)
-#sweep_p_ss()
+#predict_sunspots_nn(p=15, epochs=10)
+sweep_p_ss(nn=True)
 
