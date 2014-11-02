@@ -58,10 +58,14 @@ def uniformly_sample(x,y, plot=False):
 	return x_n,y_n
 
 def get_scaled_x(x0, N):
+	"""
+	Scales np.arange(N) to be compatible with x0.
+	Useful in plotting future (out-of-data) values.
+	"""
 	alpha, beta = x0[0], x0[1]-x0[0]
 	return alpha + beta*np.arange(N)
 
-def predict_CO2():
+def predict_CO2(return_full=False, plot=False):
 	"""
 	Time series prediction for CO2 data
 	"""
@@ -79,11 +83,11 @@ def predict_CO2():
 	sin_T = (sin_T+0.0)/N 
 	sin_w = 1.0/sin_T ## frequency of the sin wave
 
-	d_filt = low_pass(d,fc=0.5*fs, fs=fs) ## cut-off freq = 1/2 sin_w
-	
+	d_filt = low_pass(d,fc=10, fs=fs) ## cut-off freq = 1/2 sin_w
+
 	## now fit an exponential curve to the data:
 	## y ~=~ exp(a*x)
-	t_filt_good = 0.83 ## time till which there are no edge effects to be seen
+	t_filt_good = 1.0 ## time till which there are no edge effects to be seen
 	n_good      = int(t_filt_good*N)
 	d_fit = d_filt[:n_good]
 
@@ -105,23 +109,34 @@ def predict_CO2():
 	power   =  np.sum(fft_abs)
 	fft_new[peaks] = 1.5*res_fft[peaks]
 
-	plt.subplot(211)
-	plt.plot(fft_abs)
-	plt.stem(np.arange(len(fft_abs))[peaks], np.abs(fft_new)[peaks])
-	plt.legend(("FFT of residual", "clean FFT"), loc=9)
-	plt.subplot(212)
-	plt.plot(d_res, '--', label="residual")
-	plt.plot(reconstruct_fft(fft_new, len(res_fft)), label="clean residual")
-	plt.legend()
-	plt.show()
-
 	d_predict += reconstruct_fft(fft_new, M)
-	plt.plot(t, d, label="actual")
-	plt.plot(get_scaled_x(t,M)[N-10:], d_predict[N-10:], label="prediction")
-	plt.plot(t[:n_good], d_fit+c, label="low-passed")
-	plt.legend(loc=4)
-	plt.grid()
-	plt.show()
+		
+	if plot:
+		plt.subplot(211)
+		plt.plot(fft_abs)
+		plt.stem(np.arange(len(fft_abs))[peaks], np.abs(fft_new)[peaks])
+		plt.legend(("FFT of residual", "clean FFT"), loc=9)
+		plt.subplot(212)
+		plt.plot(d_res, '--', label="residual")
+		plt.plot(reconstruct_fft(fft_new, len(res_fft)), label="clean residual")
+		plt.legend()
+		plt.suptitle("Residual Analysis")
+		plt.show()
+
+		plt.plot(t, d, label="actual")
+		plt.plot(get_scaled_x(t,M)[N-10:], d_predict[N-10:], label="prediction")
+		plt.plot(t[:n_good], d_fit+c, label="low-passed")
+		plt.legend(loc=4)
+		plt.xlabel("year")
+		plt.ylabel("CO2 levels")
+		plt.grid()
+		plt.show()
+
+	if return_full:
+		return d_predict, d, d_fit+c, p
+	else:
+		return d_predict, d
+
 
 
 def predict_sunspots(p=100):
@@ -212,7 +227,7 @@ def sweep_p_ss():
 	plt.show()
 
 
-#predict_CO2()
-predict_sunspots(p=15)
+predict_CO2(return_full=False, plot=True)
+#predict_sunspots(p=15)
 #sweep_p_ss()
 
