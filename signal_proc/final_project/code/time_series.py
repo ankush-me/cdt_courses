@@ -170,6 +170,7 @@ def predict_CO2_gp():
 	f_mu = mu_poly(p)
 
 	"""
+	## for square-exponential:
 	f_cov= cov.CovSqExpARD()
 	signal_std = 0.5
 	len_scales = np.array([10])
@@ -179,12 +180,6 @@ def predict_CO2_gp():
 	## optimize for the hyper-parameters:
 	##   initial guess:
 	f_cov= cov.Periodic()
-	"""
-	signal_std = 1e-1
-	slope      = 35.0
-	period     = 100.08
-	obs_std    = 1.0
-	"""
 	signal_std = 2.53303896031
 	slope      = 34.6180235039
 	period     = 527.686276333
@@ -197,12 +192,11 @@ def predict_CO2_gp():
 	
 	res  = f_cov.train(th0, xs, d-f_mu.get_mu(xs)) 
 	resx = np.squeeze(res.x)
-	#resx = th0
 	print "inital    hyperparams : ", th0
 	print "optimized hyperparams : ", resx
 
-	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3])
-	#f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1])
+	f_cov.set_log_hyperparam(resx[0], resx[1], resx[2], resx[3]) ## for periodic
+	#f_cov.set_log_hyperparam(resx[0], resx[1:-1], resx[-1]) ## for sq-exp
 	f_cov.print_hyperparam()
 
 	gpr = gp.GPR(f_mu, f_cov)
