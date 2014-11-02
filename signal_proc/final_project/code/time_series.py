@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import scipy.io as sio
 from scipy import interpolate
 import os.path as osp
-from scipy.signal import butter, filtfilt, find_peaks_cwt
+from scipy.signal import butter, filtfilt, find_peaks_cwt, fftconvolve
+from auto_regression import *
 
-
-ddir = "/Users/ankushgupta/cdt_courses/signal_proc/final_project"
+ddir = "/Users/ankushgupta/cdt_courses/signal_proc/final_project/data"
 
 
 def low_pass(x,  fc, fs):
@@ -14,8 +14,8 @@ def low_pass(x,  fc, fs):
     Removes high-frequency content from an array X.
     fs : sampling frequency
     """
-    lowcut  = fc   # lower-most freq (Hz)
-    highcut = 3.0   # higher-most freq (Hz)
+    lowcut  = 0.0   # lower-most freq (Hz)
+    highcut = fc   # higher-most freq (Hz)
 
     nyq = 0.5 * fs  # nyquist frequency
     low = lowcut / nyq
@@ -123,6 +123,97 @@ def predict_CO2():
 	plt.grid()
 	plt.show()
 
-predict_CO2()
 
+def predict_sunspots():
+	"""
+	Time series prediction for Sunspots data.
+	"""
+	dfname = osp.join(ddir,"sunspots.mat")
+	d = sio.loadmat(dfname)
+	t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
+	d_mu = np.mean(d)
+	d = d - d_mu ## center the data
+	id_1990 = int(np.nonzero(t==1990)[0])
+	t_train, d_train, t_test, d_test = t[:id_1990], d[:id_1990], t[id_1990:], d[id_1990:]
+
+	p =3
+	coeffs_autocorr = AR_autocorr(d_train,p=p)
+
+	def rolling_regression(dd, c, n_predict=12):
+		"""
+		Return n_predictions into the future, given
+		d entries from the past and auto-regression coeffs c.
+
+		order of enteries:
+		d : d[t-p], ...., d[t-1]
+		c : c[t-p], ...., c[t-1]
+		"""
+		yout = np.empty(n_predict)
+		y_prev = dd
+		for i in xrange(n_predict):
+			yout[i] = np.sum(y_prev*c)
+			y_prev[:-1] = y_prev[1:]
+			y_prev[-1]  = yout[i]
+		return yout
+
+	t_pred_idx = 12*np.ceil(p/12.0) ## calculate the index of the first year I can predict.
+	t_pred = t[t_pred_idx:]
+	d_pred = np.zeros_like(t_pred)
+	n_predict_years = len(t_pred)/12 + 1
+	for i in xrange(n_predict_years):
+		n_predict = min(len(t_pred)-12*(i), 12)
+		t_idx = t_pred_idx+i*12
+		d_pred[i*12:i*12+n_predict] = rolling_regression(d[t_idx-p:t_idx], coeffs_autocorr, n_predict)
+
+
+	corr = fftconvolve(d[t_pred_idx:], d_pred[::-1], mode='full')
+	i_mid = (len(corr))/2
+	i_peak = np.argmax(corr)
+	di_step = (i_peak-i_mid)
+	print "need to adjust by = %d, p=%d"%(di_step, p)
+	di = di_step*(t[1]-t[0])
+	plt.plot(corr)
+	plt.scatter([i_mid], [corr[i_mid]], c='g', label="mid")
+	plt.scatter([i_peak], [corr[i_peak]], c='r', label="peak")
+	plt.legend()
+	plt.show()
+
+
+	plt.subplot(211)
+	plt.plot(t, d, 'b-.', label="ground truth")
+	plt.plot(t_pred, d_pred, 'g', label="prediction")
+	plt.legend()
+	plt.subplot(212)
+	plt.plot(coeffs_autocorr)
+	plt.title("auto-correlation coefficients")
+	plt.show()
+
+def sweep_p():
+	dfname = osp.join(ddir,"sunspots.mat")
+	d = sio.loadmat(dfname)
+	t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
+	#ps= np.array([2,5,10,50,100, 200,500,1000])
+	ps = np.array([1,10,100])
+	err= np.zeros(len(ps))
+	ys = []
+	for i in xrange(len(ps)):
+		p = ps[i]
+		coeffs = AR_autocorr(d,p=p)
+		y_p = AR_predict(d,[coeffs])[0]
+		ys.append(y_p)
+		err[i] = rms(y_p, d[p:])
+
+	for i in xrange(len(ps)):
+		plt.plot(np.arange(len(d))[ps[i]:], ys[i], label="p=%d"%ps[i])
+	plt.legend()
+	plt.show()
+	plt.plot(ps, np.exp(err))
+	plt.xlabel('p (auto-regression order)')
+	plt.ylabel("error")
+	plt.show()
+
+
+#predict_CO2()
+#predict_sunspots()
+sweep_p()
 
