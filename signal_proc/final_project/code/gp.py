@@ -119,11 +119,12 @@ def plot_gpr(x,y,std, xy_gt=None, xlabel=None, ylabel=None, title=None, ax=None,
 	ax.fill_between(x, y+std, y-std, alpha=0.2, facecolor='r')
 	ax.fill_between(x, y+2*std, y-2*std, alpha=0.2, facecolor='r')
 	ax.plot(x,y,'0.40', linewidth=2, label='prediction')
-	if xy_gt!=None: ax.plot(xy_gt[0],xy_gt[1],'g',label='ground truth', lw=2.0)
+	if xy_gt!=None: ax.plot(xy_gt[0],xy_gt[1],'g',label='ground truth', lw=5.0)
 	if y_obs!=None: ax.plot(x, y_obs, 'r.', label='observation')
 	if xlabel!=None: plt.xlabel(xlabel)
 	if ylabel!=None: plt.ylabel(ylabel)
 	if title!=None : plt.title(title)
+	plt.grid()
 	plt.legend(loc=4)
 	plt.show()
 

@@ -179,18 +179,25 @@ def predict_CO2_gp():
 	## optimize for the hyper-parameters:
 	##   initial guess:
 	f_cov= cov.Periodic()
-	signal_std = 5.0
+	"""
+	signal_std = 1e-1
 	slope      = 35.0
 	period     = 100.08
-	obs_std    = 0.5
+	obs_std    = 1.0
+	"""
+	signal_std = 2.53303896031
+	slope      = 34.6180235039
+	period     = 527.686276333
+	obs_std    = 1.0
+	
 	th0 = np.log(np.r_[signal_std, slope, period, obs_std])
 	xs = np.arange(len(d))
 	ys = d - f_mu.get_mu(xs)
 	xs_new = np.arange(len(d)/2, 1.5*len(d))
 	
-	#res  = f_cov.train(th0, xs, d-f_mu.get_mu(xs)) 
-	#resx = np.squeeze(res.x)
-	resx = th0
+	res  = f_cov.train(th0, xs, d-f_mu.get_mu(xs)) 
+	resx = np.squeeze(res.x)
+	#resx = th0
 	print "inital    hyperparams : ", th0
 	print "optimized hyperparams : ", resx
 
