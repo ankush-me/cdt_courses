@@ -1,0 +1,5 @@
+To do:
+	
+	1. Heirarchical EMD for sun-spots
+	2. NN for AR sunspots
+	3. GP for CO2 -- error bars.
