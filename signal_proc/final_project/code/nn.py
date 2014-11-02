@@ -38,6 +38,18 @@ class cross_entropy_error:
   def deriv(self, y, y_pred):
     return (y_pred-y)/((y_pred*(1.0-y_pred)) + eps)
 
+
+class f_identity:
+  """
+  Identity function (for regression).
+  """
+  def val(self, x):
+    return x.copy()
+  
+  def deriv(self, x):
+    assert x.ndim==1
+    return np.ones_like(x)
+
 class f_sigmoid:
   """
   The sigmoid function.
@@ -138,14 +150,17 @@ class neural_net:
       fS.append(fSi)
     return S, fS
 
-  def classify(self, xin):
+  def classify(self, xin, regress=False):
     """
     Returns the armgax of the output units.
     """
     _, fS = self.layer_forward(0, xin)
     for i in xrange(1, self.nlayers):
-      _, fS = self.layer_forward(i, fS)    
-    return np.argmax(fS)
+      _, fS = self.layer_forward(i, fS) 
+    if regress:
+      return fS   
+    else:
+      return np.argmax(fS)
 
   def layer_backward(self, i, d_back, S_i):
     """
