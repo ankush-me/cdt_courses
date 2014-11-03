@@ -51,8 +51,8 @@ The short-term trend was modelled as a pure sinusoidal i.e., $f_S(t) = f_{CO_2} 
 Figure~\ref{fig:co2_decomp} shows the final result --- predictions up to the year 2050. Also shown is the low-passed version of the original signal used for fitting the long-term trend.
 \clearpage
 \subsection*{Gaussian Process Regression for $\text{CO}_2$}
-The code written for the \emph{Data Estimation and Inference}  course was used here. The polynomial fit for the long-term trend was used as the mean-function. For the covariance, I analysed two Kernels --- (1) Square-Exponential $= \sigma^2 exp\left(-(x_1-x_2)^2/2a\right) + \sigma_y^2I$ and, (2) Periodic $= \sigma^2 exp\left(-l^2\sin^2(2\pi/b|x_1-x_2|)\right)$.\\\\
-Figure~\ref{fig:gpr} shows the results (please see the figure caption for discussion).
+The code written for the \emph{Data Estimation and Inference}  course was used here. The polynomial fit for the long-term trend was used as the mean-function. For the covariance, I analysed two Kernels --- (1) Square-Exponential $= \sigma^2 exp\left(-(x_1-x_2)^2/2a\right) + \sigma_y^2I$ and, (2) Periodic $= \sigma^2 exp\left(-l^2\sin^2(2\pi/b|x_1-x_2|)\right)$. The hyper-parameters were optimised using a combination of conjugate gradient methods and human-in-the-loop-stochastic-gradient-descent.\\\\
+Figure~\ref{fig:gpr} shows the results (please see the figure caption for discussion). 
 
 \begin{figure}[htp]
 \begin{center}
@@ -68,47 +68,68 @@ Figure~\ref{fig:gpr} shows the results (please see the figure caption for discus
 \end{figure}
 \clearpage
 
-In this lab we investigate using Gaussian Processes for regression on weather data prediction. Following are the main features of this implementation.
-\begin{itemize}
-    \item The code was implemented in Python.
-    \item Two mean functions were analyzed : (1) constant mean = mean of the data (2) cubic spline fit to the data.\footnote{ Note that these are strictly not bayesian methods as we are using the data itself to specify the prior.}
-    \item Two covariance functions were analyzed :
-        \begin{enumerate}
-        \item Squared-Exponential = $\sigma^2 exp\left(-\dfrac{(x_1-x_2)^TM^{-1}(x_1-x_2}{2}\right) + \sigma_y^2I$
-        \item Periodic  = $\sigma^2 exp\left(-l^2\sin^2(2\pi/b|x_1-x_2|)\right)$
-        \end{enumerate}
-        \item The hyperparameters were tuned by maximizing the marginal likelihood. Analytical gradients were used with the conjugate gradient optimization method.
-        \item Sequential predictions were also carried out for Tide Height and Temperature time series.
-\end{itemize}
-\textbf{Please note all figures indicate intervals of 1 and 2 standard deviations.}
-\subsection*{RMS Error with Different Means/ Covariances}
-The table below indicates the root-mean-squared error of the \textbf{tide-height} predcitions with respect to the ground-truth data. The covariance hyper-parameters used for these experiments were optimised through marginal likelihood as detailed in the next section.
+\section*{Sunspots Activity Forecasting}
+This Sunspots Activity series was forecasted using two techniques --- (1) Using $AR(p)$ models trained using Yule-Walker equations and, (2) using 1-hidden layer feed-forward neural network regression with $p$ lagged inputs, trained using back-propagation.\\
 
-\begin{table}[h]
+A neural-network was used, because auto-regressive modes can be seen as a one linear neuron (perceptron) network. Hence, I was curious whether adding further complexity to the model improves the prediction accuracy. The neural network architecture was heuristically \footnote{keeping in mind the size of training data available and the time required to train these networks.} chosen to have one-hidden layer, with $p$ $tanh$ input units, $p/2$ $tanh$ hidden units and one linear output unit. The inputs to the network were $p$ delayed values of the signal $\{x[t-p],\hdots,x[t-1]\}$ and the output was trained to match $x[t]$. The data was normalised to have a mean of zero and a maximum value of one to avoid network saturation.\\
+
+Both the AR model and the neural-network were trained for one-step predictions. However, 12 sequential  predictions (corresponding to one full year) were made using rolling regression in calculating the error rate. Figure~\ref{fig:ss} below shows the prediction output of $AR(15)$ model.
+\begin{figure}[hbp]
+\begin{center}
+\includegraphics[width=18cm,height=9.5cm]{figs/ss_AR15_predict.pdf}
+\end{center}
+\caption[]{Sunspot data prediction using Auto-Regressive ($p=15$) model.}
+\label{fig:ss}
+\end{figure}
+\clearpage
+
+Figure~\ref{fig:ss_err} and compares the accuracy of the AR model and neural-network for increasing values of $p$. We note that for small $p$ neural network tracks the error rate of the AR models but tends to overfit and do worse for larger $p  > 100$.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=10cm,height=6.5cm]{figs/sunspot_fit_error.pdf}
+\end{center}
+\caption[]{Sunspot data prediction using Auto-Regressive ($p=15$) model.}
+\label{fig:ss_err}
+\end{figure}
+
+Both AR models and NN (for regression) invariably introduce some ``lag'', i.e., more concretely, the predictions of these models is better matched if is shifted in time by some small amount. To quantify this shift, I found the peak of the correlation function between the predicted signal and the actual signal. Figure~\ref{fig:ss_corr} shows the correlation function and peak for AR(15) model. Table~\ref{tab1} shows the amount of shift for optimum matching as a function of $p$ for AR models.
+\begin{figure}[hbp]
+\begin{center}
+\includegraphics[width=18cm,height=6.5cm]{figs/ss_lag_corr.pdf}
+\end{center}
+\caption[]{Correlation between prediction and the actual signal for detecting lag.}
+\label{fig:ss_corr}
+\end{figure}
+
+\begin{table}[htp]
 \begin{center}
 \begin{tabular}{|l||r|r|r|r|r|r|r|r|r|r|r|}
 \hline
-Mean \textbackslash Covariance & Squared-Exponent & Periodic\\\hline\hline
-Mean(data) & \textbf{0.158} &   0.175 \\\hline
-Spline     & 0.240 &   0.290 \\\hline
+p      & 2 & 5 & 10 & 15 & 20 & 70 & 100 & 300 & 500 & 600\\\hline
+Lag  & -5 &  -6 & -6 & -6 & -5 & -4 & -4 & -3 & 0 & 0 \\\hline
 \end{tabular}
-\caption{RMS Error for tide-height predictions.}
+\caption{Lag for best correlation (or matching) as a function of $p$.}
 \label{tab1}
 \end{center}
 \end{table}
 
-%\begin{figure}[h]
-%\begin{subfigure}[h]{\linewidth}
-%\includegraphics[width=15cm, height=6.5cm]{figs/h_sqexp_const.pdf}
-%\caption{}
-%\end{subfigure}\\
-%\begin{subfigure}[h]{\linewidth}
-%\includegraphics[width=15cm, height=6.5cm]{figs/h_per_const.pdf}
-%\caption{}
-%\end{subfigure}%
-%\caption[]{The figure (a) above uses the square-exponential covariance where as figure (b) uses periodic (sin-squared-exponent). Even though the rms error of (a) is lower than (b) (0.158 < 0.175), notice the variance towards the end (after $t>7000$) --- the variance for the squared-exponent is higher than periodic kernel because it cannot capture the long-term periodic trend in the data.}
-%\label{fig:f1}
-%\end{figure}
-%\clearpage
+\section*{Financial Data}
+A distinctive feature of this data-set is that it is discrete\footnote{Thanks to James Thewlis and the TAs for this insight.} --- the financial data goes up or down in discrete units. Hence, predicting this time series can be seen as a classification problem instead of a regression problem --- given the past data, predict whether the change in the next tick will be $\{-4,\hdots,0,\hdots,4\}$.\\
 
+All classification problems rely on find good features for their solution. Given the time constraints and my past (good) experience with using them for MNIST digit classification, I once again tried using neural networks\footnote{neural-networks = classification sledge-hammers?}, but with little success. I tried a bunch of different architectures but none could do better than random guessing --- i.e. an error rate better than $1/|\{-4,\hdots,0,\hdots,4\}| = 1/9$. Figure~\ref{fig:nn} shows the error-rate from a typical run --- we note that the neural network overfits to the training data and generalises poorly to the test-data. Perhaps, techniques to avoid overfitting would have helped here.
+
+\begin{figure}[hbp]
+\begin{center}
+\includegraphics[width=18cm,height=8cm]{figs/two_layer_finance.pdf}
+\end{center}
+\caption[]{Cross-Entropy loss function error rate for a feed-forward neural network on the financial time series data.}
+\label{fig:nn}
+\end{figure}
+\clearpage
+
+\section*{Mackey-Glass Time Series}
+Unfortunately, I could not find to really delve into this time series due to time constraints. While reading about solving this problem I came across the ideas of recovering embedding dimension and attractors --- things I would love to explore further in the future.
+\section*{Code}
+All the code was written in python. No time-series-forecasting/ machine-learning libraries were used. All the predictors --- AR model, gaussian process regression, neural nets were written by me and the source code is attached with this report. Instructions on how to run the code are present in \texttt{README.txt}
+\section*{Thank You!}
 \end{document}

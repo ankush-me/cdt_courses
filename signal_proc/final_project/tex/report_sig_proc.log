@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.10.28)  3 NOV 2014 02:15
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.10.28)  3 NOV 2014 03:23
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -328,46 +328,101 @@ Overfull \hbox (42.37975pt too wide) in paragraph at lines 63--64
 pdfTeX warning: /usr/texbin/pdflatex (file ./figs/co2_predict_gp_comb.pdf): PDF
  inclusion: multiple pdfs with page group included in a single page
 >]
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 73.
- (/usr/local/texlive/2014/texmf-dist/tex/latex/base/omscmr.fd
-File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 73.
- [4
+Underfull \hbox (badness 10000) in paragraph at lines 72--73
 
-]
-(./report_sig_proc.aux) ) 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--75
+
+ []
+
+<figs/ss_AR15_predict.pdf, id=255, 1156.32pt x 646.81653pt>
+File: figs/ss_AR15_predict.pdf Graphic file (type pdf)
+
+<use figs/ss_AR15_predict.pdf>
+Package pdftex.def Info: figs/ss_AR15_predict.pdf used on input line 79.
+(pdftex.def)             Requested size: 512.13474pt x 270.29907pt.
+
+Overfull \hbox (42.37975pt too wide) in paragraph at lines 79--80
+ [] 
+ []
+
+[4
+
+ <./figs/ss_AR15_predict.pdf>]
+<figs/sunspot_fit_error.pdf, id=302, 578.16pt x 433.62pt>
+File: figs/sunspot_fit_error.pdf Graphic file (type pdf)
+
+<use figs/sunspot_fit_error.pdf>
+Package pdftex.def Info: figs/sunspot_fit_error.pdf used on input line 89.
+(pdftex.def)             Requested size: 284.52713pt x 184.9444pt.
+
+<figs/ss_lag_corr.pdf, id=303, 1156.32pt x 646.81653pt>
+File: figs/ss_lag_corr.pdf Graphic file (type pdf)
+
+<use figs/ss_lag_corr.pdf>
+Package pdftex.def Info: figs/ss_lag_corr.pdf used on input line 98.
+(pdftex.def)             Requested size: 512.13474pt x 184.9368pt.
+
+Overfull \hbox (42.37975pt too wide) in paragraph at lines 98--99
+ [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 117--118
+
+ []
+
+[5
+
+ <./figs/sunspot_fit_error.pdf> <./figs/ss_lag_corr.pdf
+
+pdfTeX warning: /usr/texbin/pdflatex (file ./figs/ss_lag_corr.pdf): PDF inclusi
+on: multiple pdfs with page group included in a single page
+>] <figs/two_layer_finance.pdf, id=400, 1156.32pt x 646.81653pt>
+File: figs/two_layer_finance.pdf Graphic file (type pdf)
+
+<use figs/two_layer_finance.pdf>
+Package pdftex.def Info: figs/two_layer_finance.pdf used on input line 123.
+(pdftex.def)             Requested size: 512.13474pt x 227.62286pt.
+
+Overfull \hbox (42.37975pt too wide) in paragraph at lines 123--124
+ [] 
+ []
+
+[6 <./figs/two_layer_finance.pdf>] [7
+
+] (./report_sig_proc.aux) ) 
 Here is how much of TeX's memory you used:
- 3566 strings out of 493117
- 52570 string characters out of 6135432
+ 3572 strings out of 493117
+ 52825 string characters out of 6135432
  118436 words of memory out of 5000000
- 6971 multiletter control sequences out of 15000+600000
+ 6976 multiletter control sequences out of 15000+600000
  17901 words of font info for 69 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 42i,10n,38p,683b,493s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2014/texmf-dist/fonts/type1/public
-/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmbx12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/a
-msfonts/cm/cmex10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/am
-sfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmmi7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmmi8.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmr12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmr5.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-r6.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.
-pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb
-></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></
-usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsl10.pfb></u
-sr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
-r/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/
-local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/l
-ocal/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on report_sig_proc.pdf (4 pages, 389630 bytes).
+ 42i,10n,38p,772b,493s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2014/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmex10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/
+amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmmi7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/ams
+fonts/cm/cmmi8.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmr12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmr5.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmr6.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
+7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.p
+fb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb>
+</usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsl10.pfb><
+/usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></
+usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></u
+sr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on report_sig_proc.pdf (7 pages, 493566 bytes).
 PDF statistics:
- 316 PDF objects out of 1000 (max. 8388607)
- 154 compressed objects within 2 object streams
+ 501 PDF objects out of 1000 (max. 8388607)
+ 182 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
- 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 
