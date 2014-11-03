@@ -446,20 +446,23 @@ def sweep_p_ss(nn=False):
     dfname = osp.join(ddir,"sunspots.mat")
     d = sio.loadmat(dfname)
     t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
-    #ps= np.array([2,5,10,15,20,50,70,100,150,200,250,300,400,500,600])
-    ps= np.array([2,5,10,15,20,50,70,100,150,200])
+
+    ps= np.array([2,5,10,15,20,50,70,100,150,200,250,300,400,500,600])
+
+
     err= np.zeros(len(ps))
     ys = []
     for i in xrange(len(ps)):
         p = ps[i]
         if nn:
-            y_p, dgt = predict_sunspots_nn(p, epochs=500, alpha=0.3, plot=False)
+            y_p, dgt = predict_sunspots_nn(p, epochs=500, alpha=0.6, plot=False)
         else:
             coeffs = AR_autocorr(d,p=p)
-            y_p, dgt = predict_sunspots(p=p)
+            y_p, dgt = predict_sunspots(p=p,plot=False)
         ys.append(y_p)
         err[i] = rms(y_p, dgt)
 
+    cp.dump([ps,err], open("ss_err_nn.cp" if nn else "ss_err_ar.cp", 'w'))
     plt.plot(ps, np.exp(err), marker='.')
     plt.xlabel('p (auto-regression order)')
     plt.ylabel("rms error")
@@ -472,5 +475,5 @@ def sweep_p_ss(nn=False):
 
 #predict_CO2_gp()
 #predict_sunspots_nn(p=15, epochs=10)
-sweep_p_ss(nn=True)
+sweep_p_ss(nn=False)
 
