@@ -125,13 +125,13 @@ def predict_finance(epochs, alpha, f_err=cross_entropy_error):
                'time': run_time}, open(fname_str,'w'))
 
 def plot_finance_nn():
-  fnames = ['../data/FinanceDeep2_1000_alpha0.500_CE.cp']
+  fnames = ['../data/FinanceBroad_2000_alpha0.500_CE.cp']
   d_ce = cp.load(open(fnames[0],'r'))
   M = len(d_ce['test_error'])
 
-  plt.plot(10*np.arange(M), d_ce['test_error']  , '-^' , color='k',   label='CE test')
-  plt.plot(10*np.arange(M), d_ce['train_error'],  '-*' , color='0.6', label='CE train')
-  plt.plot(10*np.arange(M), d_ce['obj_error'],  '-' , color='b', label='CE Loss')
+  plt.plot(10*np.arange(M), d_ce['test_error']  , '-^' , color='k',   label='test error')
+  plt.plot(10*np.arange(M), d_ce['train_error'],  '-*' , color='0.6', label='train error')
+  #plt.plot(10*np.arange(M), d_ce['obj_error'],  '-' , color='b', label='CE Loss')
   
   plt.xlabel('num epoch')
   plt.ylabel('error rate')

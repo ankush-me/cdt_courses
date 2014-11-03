@@ -8,7 +8,7 @@ from scipy.signal import butter, filtfilt, find_peaks_cwt, fftconvolve
 from auto_regression import *
 import cov, gp ## GPR code
 import nn ## neural-net code
-import time, math
+import time, math, sys
 import cPickle as cp
 
 ddir = "/Users/ankushgupta/cdt_courses/signal_proc/final_project/data"
@@ -157,7 +157,7 @@ class mu_poly:
     def get_mu(self,x):
         return np.polyval(self.p, x)
 
-def predict_CO2_gp():
+def predict_CO2_gp(plot=True):
     """
     Predict CO2 data using periodic covariance Gaussian Process Regression.
     """
@@ -212,8 +212,9 @@ def predict_CO2_gp():
     y_std = np.interp(np.arange(len(y_std)), xf, yf)
     y_std = np.atleast_2d(y_std).T
 
-    gp.plot_gpr(get_scaled_x(t,len(yo_mu))+(t[1]-t[0])*xs_new[0],c+yo_mu, y_std, [get_scaled_x(t,len(d)),d+c],
-                xlabel="years", ylabel="CO2 Levels", title="Predicted CO2 Levels (G.P.)")
+    if plot:
+        gp.plot_gpr(get_scaled_x(t,len(yo_mu))+(t[1]-t[0])*xs_new[0],c+yo_mu, y_std, [get_scaled_x(t,len(d)),d+c],
+                    xlabel="years", ylabel="CO2 Levels", title="Predicted CO2 Levels (G.P.)")
 
 
 def predict_sunspots(p=100, plot=True):
@@ -447,8 +448,7 @@ def sweep_p_ss(nn=False):
     d = sio.loadmat(dfname)
     t,d = np.squeeze(d['year']), np.squeeze(d['activity'])
 
-    ps= np.array([2,5,10,15,20,50,70,100,150,200,250,300,400,500,600])
-
+    ps= np.array([2,5,10,20,50,100,200,300,500])
 
     err= np.zeros(len(ps))
     ys = []
@@ -473,7 +473,25 @@ def sweep_p_ss(nn=False):
     plt.show()
 
 
-#predict_CO2_gp()
-#predict_sunspots_nn(p=15, epochs=10)
-sweep_p_ss(nn=False)
-
+if __name__=="__main__":
+    choice = sys.argv[1]
+    if choice =='0':
+        print "Predicting Sunspots using AR(15) model."
+        predict_sunspots(p=15, plot=True)
+    elif choice =='1':
+        print "Plotting sunspots AR(p) models' error function."
+        sweep_p_ss(nn=False)
+    elif choice == '2':
+        print "Prediciting sunspots using neural nets."
+        predict_sunspots_nn(15,epochs=20,alpha=0.6,plot=True)
+    elif choice =='3':
+        print "Plotting sunspots Neural-Net error function. This might take a long time.."
+        sweep_p_ss(nn=True)
+    elif choice=='4':
+        print "Predicting CO2 data using model decomposition."
+        predict_CO2(return_full=False, plot=True)
+    elif choice=='5':
+        print "Prediciting CO2 data using periodic gaussian process regression."
+        predict_CO2_gp(plot=True)
+    else:
+        print "Unkown choice: use a number between 0 and 5. Exiting."
