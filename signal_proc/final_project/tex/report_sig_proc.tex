@@ -50,8 +50,23 @@ The short-term trend was modelled as a pure sinusoidal i.e., $f_S(t) = f_{CO_2} 
 
 Figure~\ref{fig:co2_decomp} shows the final result --- predictions up to the year 2050. Also shown is the low-passed version of the original signal used for fitting the long-term trend.
 \clearpage
+\subsection*{Gaussian Process Regression for $\text{CO}_2$}
+The code written for the \emph{Data Estimation and Inference}  course was used here. The polynomial fit for the long-term trend was used as the mean-function. For the covariance, I analysed two Kernels --- (1) Square-Exponential $= \sigma^2 exp\left(-(x_1-x_2)^2/2a\right) + \sigma_y^2I$ and, (2) Periodic $= \sigma^2 exp\left(-l^2\sin^2(2\pi/b|x_1-x_2|)\right)$.\\\\
+Figure~\ref{fig:gpr} shows the results (please see the figure caption for discussion).
 
-
+\begin{figure}[htp]
+\begin{center}
+\begin{subfigure}[h]{\linewidth}
+\includegraphics[width=18cm,height=6.5cm]{figs/co2_predict_gp.pdf}
+\end{subfigure}\\
+\begin{subfigure}[h]{\linewidth}
+\includegraphics[width=18cm,height=6.5cm]{figs/co2_predict_gp_comb.pdf}
+\end{subfigure}
+\end{center}
+\caption[]{[Top] GPR using the square-exponential kernel. Note the high-uncertainty in prediction. The future predictions basically just track the mean function. [Bottom] GPR prediction using periodic kernel. Since this periodic kernel captures the periodicity in the data, the future predictions have low uncertainty (inset). There is some finite variance at the points where observations are available because an observation uncertainty term was added to the kernel to make it numerically robust. The two red intervals indicate regions of one and two standard deviations.}
+\label{fig:gpr}
+\end{figure}
+\clearpage
 
 In this lab we investigate using Gaussian Processes for regression on weather data prediction. Following are the main features of this implementation.
 \begin{itemize}
