@@ -48,14 +48,19 @@ classdef variable_node < node
         % @param to_unid : node to which message is being passed.
         function message = getMessage(obj, to_unid)
             if obj.observed
-                ?;
+                message = zeros(obj.dimension, 1);
+                message(obj.value) = 1.0;
             else
-                ?;
+                message = ones(obj.dimension, 1);
+                for i = 1 : length(obj.nodes)
+                    if ~strcmp(obj.nodes{i}.unid, to_unid)
+                        message = message .* obj.messages{i};
+                    end
+                end
+                message = message/sum(message);
             end
-            %message must be column vector
-            message = message(:);
         end
-        
+
         % passMessagesIn : method to pass messages from the edge to this
         %                  node
         %
@@ -78,15 +83,22 @@ classdef variable_node < node
         %                           of the variable represented by this
         %                           node. THIS IS A METHOD WHICH MUST BE
         %                           FILLED OUT BY THE STUDENT.
+        % Assumes that the obj's messages have been updated before calling
+        % this function.
         %
         function prob = getMarginalDistribution(obj)
             if obj.observed
-               ?;
+                prob = zeros(obj.dimension, 1);
+                prob(obj.value) = 1.0;           
             else 
-                ?;
+                prob = ones(obj.dimension, 1);
+                for i = 1 : length(obj.nodes)
+                    prob = prob .* obj.messages{i};
+                end
+                prob = prob / sum(prob);
             end
         end
-        
+
         % setValue : method to set the vaue of this variable node.
         function setValue(obj, val)
             obj.value = val;

@@ -754,6 +754,11 @@ vn_Intubation.addNode(fn_MinVol_VentLung_Intubation);
 fn_MinVol_VentLung_Intubation.addNode(vn_Intubation); 
  
 % set the value of any nodes which are observed
+vn_SaO2.setValue(1);
+vn_BP.setValue(1);
+vn_ArtCO2.setValue(2);
+vn_Press.setValue(1);
+vn_ExpCO2.setValue(1);
 
 % do loopy beleif propogation as an inference procedure.  pass messages in
 % every node 20 times.
@@ -763,6 +768,7 @@ for i = 1 : 20
     vn_MinVol.loopy_bp;
     vn_MinVol.setNotUpdated;
 end
+
 
 % display the marginal distribution in the variable node for Kinked Tube
 vn_KinkedTube.getMarginalDistribution

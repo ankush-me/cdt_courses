@@ -38,10 +38,52 @@ classdef factor_node < node
         % @param to_unid : node to which message will be sent
         %
         function message = getMessage(obj, to_unid)
-            ?
-            ?
-            %message must be column vector
-            message = message(:);
+
+            %% base-case: if I am a leaf: return the factor as it is
+            if length(obj.nodes)==1
+                message = obj.factor.factor_matrix;
+            else
+                %% find out the neighbor index of to_unid:
+                num_neigh  = length(obj.nodes);
+                to_ind = -1;
+                for i = 1 : num_neigh
+                    if strcmp(obj.nodes{i}.unid, to_unid)
+                        to_ind = i;
+                        break;
+                    end
+                end
+                assert(to_ind > -1 , 'factor.getMessage : must be connected.');
+
+                %% exclude the message from the to_node:
+                neigh_msg = {obj.messages{1:to_ind-1}, obj.messages{to_ind+1:end}};
+                msg_prod  = multilinear_product(neigh_msg{:});
+
+
+                %% INSERT SINGLETON DIMENSION AT THE OUTPUT:
+                %% this vector tells how to reorder the dimensions
+                %% of the multilinear product to insert a singleton
+                %% dimension at the output:
+                zz         = 1:num_neigh-1;
+                ndim       = num_neigh;
+                axis_order = [zz(1:to_ind-1) ndim zz(to_ind:end)];
+                msg_ord    = permute(msg_prod, axis_order);
+
+                %% CREATE COPIES ALONG OUTPUT DIMENSION
+                rep_num = ones(num_neigh,1);
+                rep_num(to_ind) = obj.nodes{to_ind}.dimension;
+                msg_tensor = repmat(msg_ord, rep_num');
+
+                %% DO ELEMENT WISE PRODUCT
+                fac_join = obj.factor.product(msg_tensor);
+
+                %% SUM OVER THE INPUT DIMENSION
+                for j=1:num_neigh
+                    if j~=to_ind
+                        fac_join = sum(fac_join, j);
+                    end
+                end
+                message = fac_join(:);
+            end
         end
 
         % display : overides the default display behavior

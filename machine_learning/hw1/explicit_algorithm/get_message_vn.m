@@ -29,16 +29,14 @@ message = ones(d,1);
 % You are responsible for implementing the logic below here to calculate
 % the correct value of message.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% AG : 
-mask = ones(d,1);
+%% AG :
 if this_node.set
-	mask = double([this_node.value==true; this_node.value==false]);
-end	
-
-for i = 1 : length(this_node.c)
-	if ~strcmp(this_node.c{i}.name,to_node.name)
-    	message = message .* this_node.m{i};
-	end
+	message = double([this_node.value==true; this_node.value==false]);
+else
+	for i = 1 : length(this_node.c)
+		if ~strcmp(this_node.c{i}.name,to_node.name)
+	    	message = message .* this_node.m{i};
+		end
+	end	
 end
-message = message .* mask;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

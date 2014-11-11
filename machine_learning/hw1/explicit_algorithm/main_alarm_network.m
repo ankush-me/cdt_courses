@@ -45,15 +45,15 @@ fn_bea.setcm({vn_a,vn_b,vn_e},{ones(2,1), ones(2,1),ones(2,1)});
 vn_m.setcm({fn_am},{ones(2,1)});
 
 % EDIT HERE: Observe that John called.
-vn_b.set_value(false); %% AG
+vn_j.set_value(true); %% AG
 
 
 % do inference by first passing messages in from the edges to vn_b and then
 % passing messages out from vn_b to the edges.
-get_all_messages(vn_a);
-pass_all_messages(vn_a);
+get_all_messages(vn_b);
+pass_all_messages(vn_b);
 
 % display the marginal distribution represented in variable node j
 %get_marginal_distribution(vn_j)'
-get_marginal_distribution(vn_a)'
+get_marginal_distribution(vn_b)'
 
