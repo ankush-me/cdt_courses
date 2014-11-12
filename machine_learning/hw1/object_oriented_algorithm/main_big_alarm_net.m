@@ -756,8 +756,8 @@ fn_MinVol_VentLung_Intubation.addNode(vn_Intubation);
 % set the value of any nodes which are observed
 vn_SaO2.setValue(1);
 vn_BP.setValue(1);
-vn_ArtCO2.setValue(2);
-vn_Press.setValue(1);
+vn_ArtCO2.setValue(1);
+vn_Press.setValue(2);
 vn_ExpCO2.setValue(1);
 
 % do loopy beleif propogation as an inference procedure.  pass messages in

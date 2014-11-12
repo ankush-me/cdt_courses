@@ -55,23 +55,13 @@ classdef factor_node < node
                 assert(to_ind > -1 , 'factor.getMessage : must be connected.');
 
                 %% exclude the message from the to_node:
-                neigh_msg = {obj.messages{1:to_ind-1}, obj.messages{to_ind+1:end}};
+                neigh_msg = {obj.messages{1:to_ind-1}, [1], obj.messages{to_ind+1:end}};
                 msg_prod  = multilinear_product(neigh_msg{:});
-
-
-                %% INSERT SINGLETON DIMENSION AT THE OUTPUT:
-                %% this vector tells how to reorder the dimensions
-                %% of the multilinear product to insert a singleton
-                %% dimension at the output:
-                zz         = 1:num_neigh-1;
-                ndim       = num_neigh;
-                axis_order = [zz(1:to_ind-1) ndim zz(to_ind:end)];
-                msg_ord    = permute(msg_prod, axis_order);
 
                 %% CREATE COPIES ALONG OUTPUT DIMENSION
                 rep_num = ones(num_neigh,1);
                 rep_num(to_ind) = obj.nodes{to_ind}.dimension;
-                msg_tensor = repmat(msg_ord, rep_num');
+                msg_tensor = repmat(msg_prod, rep_num');
 
                 %% DO ELEMENT WISE PRODUCT
                 fac_join = obj.factor.product(msg_tensor);
