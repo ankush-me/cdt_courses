@@ -75,7 +75,7 @@ while ll + e < nll
     scatter(mu_p(:,1), mu_p(:,2), 200,'s', 'filled');
     
     %% plot pdf contours:
-    nn = 75;
+    nn = 100;
     x = linspace(2,10,nn);
     y = linspace(4,7,nn);
     [xx,yy] = meshgrid(x,y);
@@ -85,9 +85,10 @@ while ll + e < nll
             zz(xi,yi) = gmm_pdf(x(xi),y(yi), mu_p, sigma_p, Pi);
         end
     end
-    contour(xx,yy,zz',20);
+    %surf(xx,yy,zz');
+    contour(xx,yy,zz',50);
     %ezcontour(@(x,y)gmm_pdf(x,y,mu_p,sigma_p,Pi), [2,10,4,7]);
-    pause(0.1);
+    pause(0.3);
 
     if ll+e < nll
         clf();
