@@ -1,4 +1,4 @@
-function plot_data(X,labels)
+function pc=plot_data(X,labels)
 % utility function to plot the data based on the first 2 principle
 % components of the data.
 

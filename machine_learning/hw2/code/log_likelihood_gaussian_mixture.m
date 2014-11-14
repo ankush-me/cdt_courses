@@ -1,4 +1,4 @@
-function ll = log_likelihood_gaussian_mixture(data,mu,sigma,pi)
+function ll = log_likelihood_gaussian_mixture(data,mu,sigma,Pi)
 % Calculates the log likelihood of the data given the parameters of the
 % model
 %
@@ -9,3 +9,14 @@ function ll = log_likelihood_gaussian_mixture(data,mu,sigma,pi)
 % @param pi     : a column matrix of probabilities for each cluster
 %
 % @return ll    : the log likelihood of the data (scalar)
+
+[N,D] = size(data);
+[D,K] = size(mu);
+
+P = zeros(N,K);
+for k=1:K
+	P(:,k) = mvnpdf(data, mu(:,k)', sigma{k}); % get the probabilities
+end
+P = P*diag(Pi); %% multiply with the prior probability
+
+ll = sum(log(sum(P,2)));

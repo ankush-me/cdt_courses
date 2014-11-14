@@ -17,13 +17,13 @@ clear
 
 % k is the number of clusters to use, you should experiment with this
 % number and MAKE SURE YOUR CODE WORKS FOR ANY VALUE OF K >= 1
-k = 2;
-e = .01;
+k = 3;
+e = .001;
 
-load fisheriris
+load fisheriris;
 
 data = meas;
-clear species meas
+%clear species meas;
 
 % this sets the initial values of the gamma matrix, the matrix of
 % responsibilities, randomly based on independent draws from a dirichlet
@@ -35,27 +35,61 @@ gamma = gamma ./ repmat(sum(gamma,2),1,k);
 % which takes most responsibility for it.
 [m labels] = max(gamma,[],2);
 
+
 % this draws a plot of the initial labeling.
-clf
-figure(1)
-plot_data(data,labels)
+clf;
+figure(1);
+plot_data(data,labels);
 
 % given the initial labeling we set mu, sigma, and pi based on the m step
 % and calculate the likelihood.
 ll = -inf;
-[mu,sigma,pi] = m_step_gaussian_mixture(data,gamma);
-nll = log_likelihood_gaussian_mixture(data,mu,sigma,pi);
+[mu,sigma,Pi] = m_step_gaussian_mixture(data,gamma);
+nll = log_likelihood_gaussian_mixture(data,mu,sigma,Pi);
 disp(['the log likelihood = ' num2str(nll);])
+
+%% plot ground-truth:
+%%figure(3);
+%%plot_data(data, species);
 
 % the loop iterates until convergence as determined by e.
 while ll + e < nll
     ll = nll;
-    gamma = e_step_gaussian_mixture(data,pi,mu,sigma);
-    [mu,sigma,pi] = m_step_gaussian_mixture(data,gamma);
-    nll = log_likelihood_gaussian_mixture(data,mu,sigma,pi);
+    gamma = e_step_gaussian_mixture(data,Pi,mu,sigma);
+    [mu,sigma,Pi] = m_step_gaussian_mixture(data,gamma);
+    nll = log_likelihood_gaussian_mixture(data,mu,sigma,Pi);
     disp(['the log likelihood = ' num2str(nll)]);
     
     [m labels] = max(gamma,[],2);
     figure(2)
-    plot_data(data,labels);
+    hold on;
+    pc = plot_data(data,labels);
+    
+    %% transform mu and sigma by (first two) principle components:
+    pc = pc(:,1:2);
+    mu_p = mu'*pc;
+    sigma_p = {};
+    for ii=1:k
+        sigma_p{ii} = pc'*sigma{ii}*pc;
+    end
+    scatter(mu_p(:,1), mu_p(:,2), 200,'s', 'filled');
+    
+    %% plot pdf contours:
+    nn = 75;
+    x = linspace(2,10,nn);
+    y = linspace(4,7,nn);
+    [xx,yy] = meshgrid(x,y);
+    zz = zeros(nn,nn);
+    for xi=1:nn
+        for yi=1:nn 
+            zz(xi,yi) = gmm_pdf(x(xi),y(yi), mu_p, sigma_p, Pi);
+        end
+    end
+    contour(xx,yy,zz',20);
+    %ezcontour(@(x,y)gmm_pdf(x,y,mu_p,sigma_p,Pi), [2,10,4,7]);
+    pause(0.1);
+
+    if ll+e < nll
+        clf();
+    end
 end
