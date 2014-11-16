@@ -56,7 +56,7 @@ for n = 1:N
         z(n) = z_n_new;
         z_p = z_n_previous; % alias
         [Ns(z_p), mu(:,z_p), S{z_p}] = exclude_statistics(x_n', Ns(z_p), mu(:,z_p), S{z_p});
-        [Ns(z(n)), mu(:,z(n)) ,S{z(n)}] = calc_statistics(data(z==z(n),:));
+        [Ns(z(n)), mu(:,z(n)), S{z(n)}] = calc_statistics(data(z==z(n),:));
     end
 end
 
