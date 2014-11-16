@@ -34,7 +34,6 @@ end
 
 % loop through every data point
 for n = 1:N
-    %data_minus_n = data(1:N~=n,:);
     x_n = data(n,:);
     z_n_previous = z(n);
  

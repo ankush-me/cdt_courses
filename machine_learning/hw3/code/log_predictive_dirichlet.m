@@ -1,5 +1,6 @@
 function [lp] = log_predictive_dirichlet(Nk,N,K,alpha)
 % Computes p(z_i=k | z{\i} (all z's except z_i))
+% = [eq (26) in http://www.kamperh.com/notes/kamper_bayesgmm13.pdf]
 %
 % @param
 % K: (maximum) number of classes
