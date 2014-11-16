@@ -1,7 +1,7 @@
 function [lp] = log_predictive_collapsed_gmm(x, K, N, Nk, X_bar_k, Sk, alpha, beta, Lambda_0, nu)
 % Compute the (unnormalized) log predictive for a single class; that is,
 % 
-%   p(x_new=k | data, alpha, beta, Lambda_0, nu)
+%   p(z_new=k | data, alpha, beta, Lambda_0, nu)
 %
 % where the dirichlet prior pi, and the cluster means and precisions mu_k
 % and Lambda_k have been marginalized out analytically.
@@ -17,27 +17,6 @@ function [lp] = log_predictive_collapsed_gmm(x, K, N, Nk, X_bar_k, Sk, alpha, be
 % Lambda_0: DxD matrix hyperparameter for wishart
 % nu: degrees of freedom hyperparameter for wishart
 
-
-D = size(Sk, 1);
-if size(X_bar_k,1) ~= D
-	Sk
-	X_bar_k
-	D
-end
-assert(size(X_bar_k,1) == D);
-
-% compute contribution from dirichlet-multinomial
-log_dirichlet = log(alpha + Nk) - log(K*alpha + N);
-
-% compute parameters for student t
-mu_star_k = get_param_mu(beta,  Nk, X_bar_k);
-Lambda_star_k = get_param_lambda(Lambda_0, beta, Nk, X_bar_k, Sk);
-beta_star_k = get_param_beta(beta, Nk);
-nu_star_k = get_param_nu(nu, Nk);
-
-df = nu_star_k - D + 1;
-W = Lambda_star_k * (beta_star_k + 1) / (beta_star_k * df);
-
-log_mvt = logmvtpdf(x, mu_star_k, W, df);
-
+log_dirichlet = log_predictive_dirichlet(Nk,N,K,alpha);
+log_mvt       = log_predictive_mvt(x, Nk, X_bar_k, Sk, beta, Lambda_0, nu);
 lp = log_dirichlet + log_mvt;
