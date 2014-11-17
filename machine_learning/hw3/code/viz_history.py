@@ -33,12 +33,27 @@ for vi in i_flat:
 	v_pos[vi] = ip,H.shape[1]-ix
 
 ## get the list of edges which trace back from the last-row:
-for ip in np.arange(P)
-
-
+active_edges = set()
+active_nodes = set()
+ix_src, ix_tar = 0, N-1
+for ip_src in np.arange(P):
+	for ip_tar in np.arange(P):
+		i_src, i_tar = np.ravel_multi_index([[ix_src, ix_tar], [ip_src, ip_tar]], H.shape)
+		if nx.has_path(G,i_src,i_tar):
+			path = nx.shortest_path(G,i_src,i_tar)
+			for n in path: active_nodes.add(n)
+			for ipath in xrange(len(path)-1):
+				active_edges.add((path[ipath],path[ipath+1]))
 
 nx.draw_networkx_nodes(G,v_pos,node_size=50)
-nx.draw_networkx_edges(G,v_pos,alpha=1.0,width=2)
-plt.axis('off')
-plt.savefig("house_with_colors.png") # save as png
+nx.draw_networkx_nodes(G,v_pos,node_size=50, nodelist=active_nodes, node_color='g')
+nx.draw_networkx_edges(G,v_pos,alpha=0.2,width=2)
+nx.draw_networkx_edges(G,v_pos,alpha=1.0,width=2, edgelist=active_edges)
+#plt.axis('off')
+plt.gca().get_xaxis().set_ticks([])
+plt.gca().get_yaxis().set_ticks([])
+plt.xlabel('particles')
+plt.ylabel('$z_n$ (class of $x_n$)')
+plt.title('Sequential Monte-Carlo Ancestor Graph')
+plt.savefig("smc_ancestry.pdf") # save as pdf
 plt.show() # display
