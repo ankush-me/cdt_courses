@@ -6,7 +6,7 @@ import networkx as nx
 
 H = sio.loadmat('H.mat')
 H = H['history']
-H = H[:20,:]
+H = H[:40,:]
 
 [N,P] = H.shape
 
@@ -30,11 +30,11 @@ for vi in i_flat:
 v_pos = {}
 for vi in i_flat:
 	ix,ip = np.unravel_index(vi,H.shape)
-	#v_pos[vi] = H.shape[1]-ix, ip
+	#v_pos[vi] = ip, H.shape[1]-ix
 	v_pos[vi] = ix, ip
 
 
-## get the list of edges which trace back from the last-row:
+## get the list of edges and nodes which trace back from the last-row:
 active_edges = set()
 active_nodes = set()
 ix_src, ix_tar = 0, N-1
@@ -47,8 +47,8 @@ for ip_src in np.arange(P):
 			for ipath in xrange(len(path)-1):
 				active_edges.add((path[ipath],path[ipath+1]))
 
-nx.draw_networkx_nodes(G,v_pos,node_size=50)
-nx.draw_networkx_nodes(G,v_pos,node_size=50, nodelist=active_nodes, node_color='g')
+nx.draw_networkx_nodes(G,v_pos,node_size=30)
+nx.draw_networkx_nodes(G,v_pos,node_size=30, nodelist=active_nodes, node_color='g')
 nx.draw_networkx_edges(G,v_pos,alpha=0.2,width=2)
 nx.draw_networkx_edges(G,v_pos,alpha=1.0,width=3, edgelist=active_edges)
 plt.gca().get_xaxis().set_ticks([])

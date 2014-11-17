@@ -81,7 +81,10 @@ for n = 1:N
     	z{ip}(n) = z_n_new;
     	%% update the class-statistic for the new class
     	particle_labels = get_particle_labels(n, ip, z, history);
-    	[Ns{ip}(z_n_new), mu{ip}(:,z_n_new), S{ip,z_n_new}] = calc_statistics(data(particle_labels==z_n_new,:));
+        for kk=1:K
+           [Ns{ip}(kk), mu{ip}(:,kk), S{ip,kk}] = calc_statistics(data(particle_labels==kk,:));
+        end
+    	%[Ns{ip}(z_n_new), mu{ip}(:,z_n_new), S{ip,z_n_new}] = calc_statistics(data(particle_labels==z_n_new,:));
     end
 
     % plot the assigments as per the first particle: (for debugging and visualization)
@@ -98,6 +101,7 @@ end
 %% plot the history matrix:
 % imagesc(history);
 % pause();
+save('H.mat', 'history');
 zo = cell(num_particles,1);
 for i=1:num_particles
 	zo{i} = get_particle_labels(n, i, z, history);

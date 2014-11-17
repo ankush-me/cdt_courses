@@ -19,7 +19,7 @@ clear species meas
 data = data(randperm(N),:);
 
 % K is the MAXIMUM number of clusters to use
-K = 10;
+K = 4;
 
 % we set a few hyperparameters (parameters of our prior)
 alpha = 1; % dirichlet parameter
@@ -28,7 +28,7 @@ nu = 5; % wishart degrees of freedom
 beta = 1; % normal covariance parameter
 
 %% 
-num_particles = 20;
+num_particles = 30;
 zs = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu);
 
 % % plot the histograms of the labels:
