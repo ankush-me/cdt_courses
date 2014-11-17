@@ -6,7 +6,7 @@ import networkx as nx
 
 H = sio.loadmat('H.mat')
 H = H['history']
-H = H[:3,:]
+H = H[:20,:]
 
 [N,P] = H.shape
 
