@@ -64,8 +64,6 @@ for n = 1:N
 	    [z_p(ip),~] = sample_from_unnormalized_log_prob(log_proposal);
 	    lg_w(ip) = log_predictive_mvt(x_n',Ns{ip}(z_p(ip)),mu{ip}(:,z_p(ip)),S{ip,z_p(ip)},beta,Lambda_0,nu);
     end
-    hist(z_p);
-    pause()
     
     % update estimate of marginal likelihood [this is optional --> do later]
    
@@ -89,10 +87,17 @@ for n = 1:N
     % plot the assigments as per the first particle: (for debugging and visualization)
     if mod(n, 10) == 0
         figure(1);
-        plot_data(data(1:n,:),z{1}(1:n));
+		subplot(121);
+		l1 = get_particle_labels(n,1,z,history);
+		plot_data(data(1:n,:),l1);
+		subplot(122);
+		hist(l1);
         drawnow;
     end
 end
+%% plot the history matrix:
+% imagesc(history);
+% pause();
 zo = cell(num_particles,1);
 for i=1:num_particles
 	zo{i} = get_particle_labels(n, i, z, history);

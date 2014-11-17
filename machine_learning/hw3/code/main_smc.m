@@ -31,21 +31,20 @@ beta = 1; % normal covariance parameter
 num_particles = 100;
 zs = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu);
 
-%%% take a majority vote for hard-assignment (assign to 'mode'):
-z = zeros(N,1);
-for ix=1:N
-	num_assign = zeros(K,1);
-	for ip=1:num_particles
-		num_assign(zs{ip}(ix)) = num_assign(zs{ip}(ix)) + 1;
-	end
-	[~,mode_class] = max(num_assign);
-	z(ix) = mode_class;
-end
+% % plot the histograms of the labels:
+% figure(2);
+% sp = 1;
+% for ip=1:10:100
+% 	subplot(2,5,sp);
+% 	sp = sp + 1;
+% 	hist(zs{ip});
+% end
 
+%% plot the labels as per particle number 2:
 figure(2);
 subplot(121);
-plot_data(data,z);
+plot_data(data,zs{4});
 subplot(122);
-hist(z);
+hist(zs{4});
 
 
