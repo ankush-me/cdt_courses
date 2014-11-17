@@ -28,13 +28,24 @@ nu = 5; % wishart degrees of freedom
 beta = 1; % normal covariance parameter
 
 %% 
+num_particles = 100;
+zs = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu);
 
-num_particles = 20;
-z = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu);
-
-%%
+%%% take a majority vote for hard-assignment (assign to 'mode'):
+z = zeros(N,1);
+for ix=1:N
+	num_assign = zeros(K,1);
+	for ip=1:num_particles
+		num_assign(zs{ip}(ix)) = num_assign(zs{ip}(ix)) + 1;
+	end
+	[~,mode_class] = max(num_assign);
+	z(ix) = mode_class;
+end
 
 figure(2);
-plot_data(data,z{2});
+subplot(121);
+plot_data(data,z);
+subplot(122);
+hist(z);
 
 
