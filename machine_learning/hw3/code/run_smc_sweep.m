@@ -70,8 +70,11 @@ for n = 1:N
    
     % resample
     [~, resample_dist] = sample_from_unnormalized_log_prob(lg_w);
+    N_eff = 1/sum(resample_dist.^2);
+    resample_dist = resample_dist + 0.0005; %% add some noise to prevent particle deprivation
+    resample_dist = resample_dist / sum(resample_dist);
     W(n,:) = resample_dist;
-    num_resamples = mnrnd(num_particles, resample_dist);
+    num_resamples = low_variance_resampling(resample_dist');
     num_cumsum = cumsum(num_resamples);
     sample_idx = 1;
     for ip=1:num_particles
