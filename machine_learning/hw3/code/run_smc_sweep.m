@@ -32,6 +32,8 @@ function [z] = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu)
 
 [N, D] = size(data);
 
+history = zeros(N,num_particles);
+
 z    = cell(num_particles,1);  %% particles
 %% initialize class-statistics for each particle:
 Ns = cell(num_particles,1);
@@ -62,7 +64,9 @@ for n = 1:N
 	    [z_p(ip),~] = sample_from_unnormalized_log_prob(log_proposal);
 	    lg_w(ip) = log_predictive_mvt(x_n',Ns{ip}(z_p(ip)),mu{ip}(:,z_p(ip)),S{ip,z_p(ip)},beta,Lambda_0,nu);
     end
-
+    hist(z_p);
+    pause()
+    
     % update estimate of marginal likelihood [this is optional --> do later]
    
     % resample
@@ -74,10 +78,12 @@ for n = 1:N
     	while ip > num_cumsum(sample_idx)
     		sample_idx = sample_idx + 1;
     	end
+    	history(n,ip) = sample_idx; %% store the ancestor relationship
     	z_n_new = z_p(sample_idx);
     	z{ip}(n) = z_n_new;
     	%% update the class-statistic for the new class
-    	[Ns{ip}(z_n_new), mu{ip}(:,z_n_new), S{ip,z_n_new}] = calc_statistics(data(z{ip}(1:n)==z_n_new,:));
+    	particle_labels = get_particle_labels(n, ip, z, history);
+    	[Ns{ip}(z_n_new), mu{ip}(:,z_n_new), S{ip,z_n_new}] = calc_statistics(data(particle_labels==z_n_new,:));
     end
 
     % plot the assigments as per the first particle: (for debugging and visualization)
@@ -87,5 +93,8 @@ for n = 1:N
         drawnow;
     end
 end
-
+zo = cell(num_particles,1);
+for i=1:num_particles
+	zo{i} = get_particle_labels(n, i, z, history);
 end
+z = zo;
