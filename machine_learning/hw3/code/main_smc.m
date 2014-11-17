@@ -28,7 +28,7 @@ nu = 5; % wishart degrees of freedom
 beta = 1; % normal covariance parameter
 
 %% 
-num_particles = 100;
+num_particles = 20;
 zs = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu);
 
 % % plot the histograms of the labels:
@@ -43,8 +43,8 @@ zs = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu);
 %% plot the labels as per particle number 2:
 figure(2);
 subplot(121);
-plot_data(data,zs{4});
+plot_data(data,zs{2});
 subplot(122);
-hist(zs{4});
+hist(zs{2});
 
 

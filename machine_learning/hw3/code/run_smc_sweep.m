@@ -33,6 +33,7 @@ function [z] = run_smc_sweep(num_particles, data, K, alpha, beta, Lambda_0, nu)
 [N, D] = size(data);
 
 history = zeros(N,num_particles);
+W = zeros(N,num_particles); %% store the weights
 
 z    = cell(num_particles,1);  %% particles
 %% initialize class-statistics for each particle:
@@ -69,6 +70,7 @@ for n = 1:N
    
     % resample
     [~, resample_dist] = sample_from_unnormalized_log_prob(lg_w);
+    W(n,:) = resample_dist;
     num_resamples = mnrnd(num_particles, resample_dist);
     num_cumsum = cumsum(num_resamples);
     sample_idx = 1;
@@ -96,8 +98,11 @@ for n = 1:N
     end
 end
 %% plot the history matrix:
-% imagesc(history);
+% figure(4);
+% imagesc(W);
+% colorbar();
 % pause();
+save('H.mat', 'history');
 zo = cell(num_particles,1);
 for i=1:num_particles
 	zo{i} = get_particle_labels(n, i, z, history);
