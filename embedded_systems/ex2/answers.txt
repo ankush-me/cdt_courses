@@ -1,0 +1,91 @@
+
+
+
+Building file: callbacks.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/callbacks.o" "callbacks.c"
+Finished building: callbacks.c
+
+Building file: data-structures.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/data-structures.o" "data-structures.c"
+Finished building: data-structures.c
+
+Building file: exercise.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/exercise.o" "exercise.c"
+Finished building: exercise.c
+
+Building file: function-pointers.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/function-pointers.o" "function-pointers.c"
+Finished building: function-pointers.c
+
+Building file: illegal-memory.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/illegal-memory.o" "illegal-memory.c"
+Finished building: illegal-memory.c
+
+Building file: malloc-free.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/malloc-free.o" "malloc-free.c"
+Finished building: malloc-free.c
+
+Building file: read-write.c
+Invoking: GCC C Compiler
+gcc -O3 -g0 -Wall -Wno-free-nonheap-object -Wno-return-local-addr -Wno-uninitialized -c -o "build/read-write.o" "read-write.c"
+Finished building: read-write.c
+
+Building target: ex-02
+Invoking: C Linker
+gcc -o ex-02 build/callbacks.o build/data-structures.o build/exercise.o build/function-pointers.o build/illegal-memory.o build/malloc-free.o build/read-write.o
+Finished building target: ex-02
+
+(1) Edit-Compile-Link-Execute
+==============================
+
+Task 1
+------
+The following goal (in order) were executed:
+  callbacks.c
+  data-structures.c
+  exercise.c
+  function-pointers.c
+  illegal-memory.c
+  malloc-free.c
+  read-write.c
+  ex-02
+
+Task 2
+------
+The `clean' goal removes (rm) all .o files in the build directory and all files with names starting with 'ex2'
+
+
+(2) Pointer Arithmetic
+======================
+
+Task 1
+------
+data[i] is equivalent to *(data+i)
+
+Task 2
+------
+[Done] : See read-write.c
+
+
+
+(3) Stack and Heap
+==================
+
+Task 1, 2 : Done in malloc-free.c
+
+
+(4) Illegal Memory
+==================
+Task 1 : Done in illegal-memory.c
+Task 2 : No operation is performed if null is passed to free. Hence, a good practice would be
+to initialize all pointers to null so that if they are accidently free'd nothing bad would happen.
+
+
+
+
