@@ -1,0 +1,78 @@
+Embedded Systems Programming
+----------------------------
+Ankush Gupta
+============
+
+(I) Warm-Up
+============
+
+Task 1 - Datatypes :
+--------------------
+  - Numbers in [0,100000) : unsigned int (32-bit unsigned int)
+  - Floating point numbers : float/ double
+  - English literature text : char[]
+  - Series of numbers in (-100000,100000) : int[]
+  - Large binary data : char[]
+  - boolean truth val : bool
+
+Task 2 - Const :
+----------------
+`const' is a modifier which when used at the time of variable declaration, implies that the variable should hold a constant value which cannot be changed during program execution.
+
+
+(II) Common Type Issues
+========================
+
+Task 1 : 248 < -1 ?
+-------------------
+When comparison b/w signed and unsigned number is made, the compiler converts the signed to unsinged (interprets the bits of the number as representing an unsinged number). Hence,
+			--------------------
+
+	Assuming 32-bits int:
+
+	-1 is being a negative number is represented in 2's complement:
+	therefore, -1 == (1111 1111 1111 1111 1111 1111 1111 1111)b
+	   == -2^31 + sum_i=0^30 2^i = -1
+
+	But, interpreting the bits of -1 for an unsinged number, we get:
+	(1111 1111 1111 1111 1111 1111 1111 1111)b
+	= sum_i=0^31 2^i = 2^32 - 1 = 4294967295
+
+	Since, 4294967295 > 248, we get the above result.
+
+
+Task 2 : -1 Printed using %u:
+-----------------------------
+Using %u in printf means that we are asking for the number to be interpreted as an unsinged integer. Hence, we get the *above calculated* output of 4294967295.
+
+vargars (...) is used as the number and type of arguments given to printf is not fixed.
+
+
+Task 3 : for loop termination:
+------------------------------
+The loop does not terminate, because of the numerical precision errors.
+More concretely, ideally when looping over 'd' we should hit 0.0
+But due to finite representation, the smallest positive number before the first
+negative number is tiny (approx = 1.879E-14, with the
+double's bits being : [0x3D 15 28 00 00 00 00 00]) but not exactly 0.0
+i.e., it does not have a bit representation with all bits set to 0). 
+
+Hence the check (d!=0.0) fails and the loop does not terminate.
+
+Task 4 : Up/Down-Casting:
+-------------------------
+ - The decimal value of 'initial' is = 2^7 + ... + 2^0 = 2^8-1 = 255
+ - This is due to 'sign-extension':
+
+   When upcasting from char to signed int, the last bit of the char is copied over
+   to fill in the bits of the integer. Since, char (0xFF) has its last bit as 1,
+   when upcasted, the int's bit representation is : (0xFF FF FF FF) == -1
+
+   However, when the char (0x7F == 0111 1111b) is upcasted to int, the last bit is 0.
+   Hence, the upcasted int's bit representation is : (0x00 00 00 7F) == 127
+
+
+
+
+
+
