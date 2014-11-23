@@ -1,0 +1,46 @@
+% -----------------------------*- LaTeX -*------------------------------
+\documentclass[11pt]{report}
+\usepackage{epstopdf}
+\usepackage{hw_style}
+\usepackage{graphicx}
+\usepackage{dsfont}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, urlcolor=blue}
+
+\def\exp#1{\mathop{\mathrm{exp}}\left( #1\right)}
+\usepackage{amsmath}
+\begin{document}
+\scribe{Ankush Gupta} % required
+\hwnumber{1} % required, must be a number
+\duedate{Feb 25} % required, omit year
+\maketitle
+% ----------------------------------------------------------------------
+
+I have taken a similar course in machine architecture (
+\href{http://inst.eecs.berkeley.edu/~cs61c}{CS61C})
+at UC Berkeley. Hence, most of the ideas introduced in this course were familiar to me. However, following is a list of things that I did not know before (or had forgotten, same thing) taking this course:
+\begin{enumerate}
+	\item I/O pins are expensive, hence, time multiplexing/ giving specific address ranges to memory modules is used to interface with the memory.
+	\item CAS latency being an important parameter for RAMs : CAS latency is the delay b/w the time a specific memory column is accessed and the time when the first data-bit(s) is(are) received. Your slide on RAM timings has made me a more informed buyer of RAMs.
+	\item Collisions in cache are extremely bad -- which reminds me of this Jeff Dean \href{http://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf}{slide 13}
+	(also see this : \href{http://www.eecs.berkeley.edu/~rcs/research/interactive_latency.html}{this cool visualisation}).
+	\item Cache sizes (especially L1 sizes) have remained fairly constant over the years.
+	\item Floating point constants in C are by default taken to be \texttt{double}, any one needs to append an \texttt{f} if they require a \texttt{float}.
+	\item \texttt{\_Bool} is equivalent to \texttt{signed char} in x86 and to \texttt{unsigned char} in ARM.
+	\item \texttt{size\_t} could be 64-bits but \texttt{int} could be actually smaller (32-bits). Hence, assigning \texttt{size\_t} to \texttt{int} could lead to overflow.
+	\item Namespace of \texttt{enum}s and variables is different. Hence, enums and variables with the same name can co-exist --- so confusing.
+	\item \texttt{volatile} type qualifier : I thought that it was to protect against compiler optimisation of loads and stores in a multi-threaded scenario. Upon \href{http://stackoverflow.com/questions/246127/why-is-volatile-needed-in-c}{further reading} I found that its real use is when interfacing with memory-mapped devices and that it actually \href{http://en.wikipedia.org/wiki/Volatile_%28computer_programming%29}{does not work} for threaded scenarios.
+	\item \textbf{Only} the statically stored variables are zero initialised and not all the variables.
+	\item Arithmetic promotion is done \emph{always} --- even when the types of the variables involved are the same (e.g.: two \texttt{char}s are promoted to \texttt{int}s before they are added etc.).
+	\item Realized why ``evaluation is done once'' in expressions with assignments is important. For example in \texttt{arr[i++] += 1}
+	\item Good to be reminded that order of evaluation of functions is not defined. e.g.: \texttt{f() + g()*h()}
+	\item Arrays and pointers are actually different --- because \texttt{sizeof} does the right thing for an array but not for a pointer.
+	\item It is \textbf{always} a good idea to declare \texttt{virtual} destructors in C++ because of polymorphism --- otherwise, we might be left with dangling/ zombie objects.
+	\item I liked your example of not storing a reference to an element in a \texttt{vector} because dynamic re-allocation can make it point to garbage.
+	\item LabView can actually be fun.
+\end{enumerate}
+
+\subsection*{Thank you!}
+\end{document}
