@@ -18,10 +18,13 @@ C = eye(4);
 D = zeros(4,2);
 
 ev = eig(A);
+figure(1);
 scatter(real(ev), imag(ev), 1000, '.');
 xlabel('real(\lambda)');
 ylabel('imag(\lambda)');
 grid on;
+disp('press any ket to continue...');
+pause();
 
 %% simulate the system:
 %----------------------
@@ -32,7 +35,6 @@ sys = ss(A,B,C,D);
 [~,~,X] = lsim(sys, u, t, x0);
 
 figure(2);
-
 subplot(2,1,1); hold on;
 m1 = real(exp(ev(2)*t));
 m2 = real(exp(ev(4)*t));
@@ -46,6 +48,29 @@ subplot(2,1,2);
 plot(t, X);
 xlabel('t'); title('State-space variables with zero inputs and x0 = [0,0,0,0.1]');
 legend('\Delta u', '\Delta w', '\Delta q', '\Delta\theta');
+disp('press any key to continue...');
+pause();
+
+
+% Simulate the system with disturbance:
+%--------------------------------------
+B_new = [B A(:,2)];
+D_new = zeros(4,3);
+t1 = 0:0.001:5;
+t2 = 5.001:0.001:100;
+t  = [t1 t2];
+U_d = [zeros(size(t,2),1), zeros(size(t,2),1), [3.5*ones(size(t1,2),1); zeros(size(t2,2),1)]];
+sys_new = ss(A,B_new,C,D_new);
+[~,~,X_new] = lsim(sys_new, U_d, t, x0);
+figure(3);
+plot(t, X_new);
+hold on;
+plot(t, U_d(:,3));
+xlabel('t'); title('State-space variables with disturbance and and x0 = [0,0,0,0]');
+legend('\Delta u', '\Delta w', '\Delta q', '\Delta\theta', 'disturbance input');
+disp('press any key to continue...');
+pause();
+
 
 %%% if the roots are : (a+ib) and (a-ib) => damping factor = -a/sqrt(a^2 + b^2):
 f_damp = -real(ev)./abs(ev);
