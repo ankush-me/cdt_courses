@@ -88,7 +88,7 @@ Q_pd = Q_psd + ee*eye(d);
 K = -s/2*B'*inv(Q_psd)
 disp(['checking if closed-loop is stable <=> A_cl is Hurwitz:'])
 A_cl = A + B*K;
-disp(['eigenvalues of A_cl = ', num2str(eig(A_cl)')])
+disp(['    eigenvalues of A_cl = ', num2str(eig(A_cl)')])
 if all(real(eig(A_cl)) < 0)
 	disp(' >> closed-loop system is stable')
 else
@@ -111,9 +111,9 @@ cvx_end
 Q_pd = Q_psd + ee*eye(d);
 K = Y*inv(Q_pd)
 
-disp(['checking if closed-loop is stable <=> A_cl is Hurwitz:'])
+disp([' >> checking if closed-loop is stable <=> A_cl is Hurwitz:'])
 A_cl = A + B*K;
-disp(['eigenvalues of A_cl = ', num2str(eig(A_cl)')])
+disp(['    eigenvalues of A_cl = ', num2str(eig(A_cl)')])
 if all(real(eig(A_cl)) < 0)
 	disp(' >> closed-loop system is stable')
 else
