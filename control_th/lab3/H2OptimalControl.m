@@ -49,7 +49,7 @@ cvx_end
 
 disp(['H2 Optimal Control :'])
 disp(['Since B1 is randomized, the problem might become infeasible.'])
-disp(['Try re-running the script if an infeasible instance was found.'])
+disp(['Try re-running the script if an infeasible instance is found.'])
 disp(' ')
 disp(['SDP status : ' cvx_status])
 K = Z*inv(X)
