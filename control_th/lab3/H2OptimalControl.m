@@ -1,6 +1,4 @@
-close all;
-clear; clc;
-
+function H2OptimalControl()
 A = [-0.003    0.039     0.000   -0.322;
 	 -0.065   -0.319     7.740    0.000;
 	  0.020   -0.101    -0.429    0.000;
@@ -47,14 +45,13 @@ cvx_begin sdp quiet
 
 cvx_end
 
-disp(['H2 Optimal Control :'])
-disp(['Since B1 is randomized, the problem might become infeasible.'])
-disp(['Try re-running the script if an infeasible instance is found.'])
+disp(['    Since B1 is randomized, the problem might become infeasible.'])
+disp(['    Try re-running the script if an infeasible instance is found.'])
 disp(' ')
-disp(['SDP status : ' cvx_status])
+disp(['     SDP status : ' cvx_status])
 K = Z*inv(X)
-disp([' ** Tr(W) = ' num2str(trace(W))])
-disp([' ** Tr((C1X+D12Z)inv(X)(C1X+D12Z)'') = ' num2str(trace(S*inv(X)*S')) ' < Tr(W)'])
-
+disp(['      ** Tr(W) = ' num2str(trace(W))])
+disp(['      ** Tr((C1X+D12Z)inv(X)(C1X+D12Z)'') = ' num2str(trace(S*inv(X)*S')) ' < Tr(W)'])
+end
 
 
