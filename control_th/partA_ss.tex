@@ -1,0 +1,29 @@
+% -----------------------------*- LaTeX -*------------------------------
+\documentclass[11pt]{report}
+\usepackage{epstopdf}
+\usepackage{graphicx}
+\usepackage{dsfont}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, urlcolor=blue}
+\usepackage{amsmath}
+\usepackage[paperheight=1.5in,paperwidth=9in, margin=0.1in]{geometry}
+
+\def\exp#1{\mathop{\mathrm{exp}}\left( #1\right)}
+\def\spvec#1{\left(\vcenter{\halign{\hfil$##$\hfil\cr \spvecA#1;;}}\right)}
+\def\spvecA#1;{\if;#1;\else #1\cr \expandafter \spvecA \fi}
+\begin{document}
+% ----------------------------------------------------------------------
+
+
+\begin{align*}
+\frac{d}{dt}\spvec{\Delta u;\Delta w;\Delta q;\Delta\theta} = \left( \begin{array}{cccc}
+X_u & X_w & 0 & -g\cos(\theta_0) \\
+Z_u & Z_w & u_0 & -g\sin(\theta_0) \\
+M_u+M_{\dot{w}}Z_u & M_w+M_{\dot{w}}Z_w & M_{\dot{q}}+M_{\dot{w}}u_0 & M_{\dot{w}}g\sin(\theta_0)\\
+0&0&1&0\\
+\end{array} \right)\spvec{\Delta u;\Delta w;\Delta q;\Delta\theta} + \left(\begin{array}{cc}X_{\delta}&X_{\delta_T}\\ Z_\delta&Z_{\delta_T}\\ M_{\delta}+M_{\dot{w}}Z_\delta&M_{\delta_T}+M_{\dot{w}}Z_{\delta_T}\\0&0\\\end{array}\right)\spvec{\Delta \delta;\Delta \delta_T}
+\end{align*}
+
+\end{document}
