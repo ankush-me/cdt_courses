@@ -6,7 +6,10 @@
 clc;
 close all;
 clear;
-
+disp_title = @(s) disp(colorize(s,'green', true, false));
+disp_blue = @(s) disp(colorize(s,'blue', true, false));
+disp_red = @(s) disp(colorize(s,'red', false, false));
+disp_yellow = @(s) disp(colorize(s,'yellow', false, false));
 
 A = [-0.003    0.039     0.000   -0.322;
 	 -0.065   -0.319     7.740    0.000;
@@ -22,7 +25,8 @@ C = eye(4);
 D = zeros(4,2);
 
 ev = eig(A);
-disp('Plotting eigen-values of A in the complex plane : ')
+disp_title('Plotting eigen-values of A in the complex plane : ')
+disp_blue(['  > Eigen-values of A are : ', num2str(ev')])
 figure(1);
 scatter(real(ev), imag(ev), 1000, '.');
 xlabel('real(\lambda)');
@@ -40,7 +44,7 @@ u  = zeros(size(t,2), 2);
 sys = ss(A,B,C,D);
 [~,~,X] = lsim(sys, u, t, x0);
 
-disp('Plotting the response of the system with inital condition : [ 0 0 0 0.1]');
+disp_title('Plotting the response of the system with inital condition : [ 0 0 0 0.1]');
 figure(2);
 subplot(2,1,1); hold on;
 m1 = real(exp(ev(2)*t));
@@ -70,7 +74,7 @@ t  = [t1 t2];
 U_d = [zeros(size(t,2),1), zeros(size(t,2),1), [3.5*ones(size(t1,2),1); zeros(size(t2,2),1)]];
 sys_new = ss(A,B_new,C,D_new);
 [~,~,X_new] = lsim(sys_new, U_d, t, x0);
-disp('Plotting the effect of constant disturbance : ')
+disp_title('Plotting the effect of constant disturbance : ')
 figure(3);
 plot(t, X_new);
 hold on;
@@ -84,9 +88,9 @@ pause();
 
 %%% if the roots are : (a+ib) and (a-ib) => damping factor = -a/sqrt(a^2 + b^2):
 f_damp = -real(ev)./abs(ev);
-disp(['Damping factors : ', num2str(f_damp(1)), ',  ',  num2str(f_damp(3))]);
-disp(['Dominant mode corresponds to the eigenvalue with smaller damping ratio.'])
-disp(['  => This eigen-value is ' num2str(ev(4))])
+disp_blue(['Damping factors : ', num2str(f_damp(1)), ',  ',  num2str(f_damp(3))]);
+disp_blue(['Dominant mode corresponds to the eigenvalue with smaller damping ratio.'])
+disp_yellow(['  => This eigen-value is ' num2str(ev(4))])
 
 
 
