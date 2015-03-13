@@ -83,7 +83,7 @@ disp(' ')
 
 hold on;
 fhigh = @(x)min(-tan(th)*x, beta);
-flow = @(x)max(tan(th)*x, -beta);
+flow  = @(x)max(tan(th)*x, -beta);
 xs = -10:0.1:0;
 ylow = flow(xs);
 yhigh = fhigh(xs);
