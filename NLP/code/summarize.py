@@ -197,6 +197,22 @@ def get_word_vecs(words,load_cp):
 		save_cpickle(w2v_words,vecs,fpath="dvec.cp")
 		return w2v_words,vecs
 
+def repeat_sample(weights, words):
+	"""
+	Weights : a vector of length N of relative importance.
+	Returns a vector of length N, with the number of 
+	integer instances for that element.
+	"""
+	assert np.min(weights) > 0.0
+	assert len(words)==len(weights)
+
+	N = len(words)
+	counts = np.ceil(weights / np.min(weights))
+	samples = []
+	for i in xrange(N):
+		for _ in xrange(counts[i]):
+			samples.append(words[i])
+	return samples
 
 def cluster_words(words, score_set, load_cp, k=3, viz=False):
 	fwords,vecs = get_word_vecs(words,load_cp)
@@ -208,15 +224,24 @@ def cluster_words(words, score_set, load_cp, k=3, viz=False):
 	clusters = np.array(clusters)
 	categories = np.unique(clusters)
 
-	word_clusters = []
+	extractive_clusters = []
+	abstractive_clusters = []
 	for c in categories:
 		members = np.arange(n)[clusters==c]
-		cwords = [fwords[i] for i in members]
-		word_clusters.append(cwords)
+		wrd_weights = [score_set[fwords[i]] for i in members]
+
+		weight_sort = np.argsort(-wrd_weights)
+		cweights = wrd_weights[weight_sort] 
+
+		sorted_members = members[weight_sort]
+		cwords = [fwords[i] for i in sorted_members]
+
+		w2v_wrds = w2v.most_similar(positive=repeat_sample(cweights,cwor), topn=2)
+		abstractive_words = [it[0] for it in w2v_wrds]
+
+		extractive_clusters.append(cwords)
+		abstractive_clusters.append(abstractive_words)
 	
-	## get top-k words from each cluster:	
-
-
 	if viz:
 		plt.figure()
 		plt.scatter(vec_2d[:,0], vec_2d[:,1])
@@ -225,7 +250,7 @@ def cluster_words(words, score_set, load_cp, k=3, viz=False):
 			ax.text(vec_2d[i,0], vec_2d[i,1], filt_words[i])
 		plt.show()
 
-
+	return extractive_clusters, abstractive_clusters
 
 def co_occurence(text, load_cp, ntextrank=4, viz=False):
 	"""
