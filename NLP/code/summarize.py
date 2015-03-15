@@ -105,17 +105,13 @@ def test_textrank(n=5):
 	words = ['ash','bittoo','casasa','d','e']
 	W = np.random.rand(n,n)
 	W = W - np.diag(np.diag(W))
-	# W = np.zeros((n,n))
-	# W[1:,0] = 1
-	# W[0,1:] = 1
+	
 	x1z = textrank_loopy(W,S=np.zeros((n,1)))
 	x1o = textrank_loopy(W,S=np.ones((n,1)))
 	
 	x2 = textrank_mathy(W)
 	visualize(words,x2, W)
 	
-	# print (x1.T-x2).shape
-	# print np.linalg.norm(x1.T-x2)
 	plt.subplot(3,1,1)
 	plt.stem(x1z)
 	plt.subplot(3,1,2)
@@ -144,15 +140,6 @@ def read_xml_sentences(fname, min_nwrds=3):
 				if nwrds > min_nwrds:
 					filt_sents.append(str(s.firstChild.data))
 	return filt_sents
-
-def dummy_similarity(w1,w2):
-	return np.random.rand()
-
-def dummy_in_w2v(wrd):
-	if np.random.rand() < 0.1:
-		return False
-	else:
-		return True
 
 def in_w2v(wrd):
 	"""
@@ -194,7 +181,6 @@ def get_distance_matrix(words,load_cp=False):
 		save_cpickle(w2v_words,W,fpath="dmat.cp")
 		return w2v_words,W
 
-
 def get_word_vecs(words,load_cp):
 	"""
 	return the word-vectors.
@@ -211,41 +197,37 @@ def get_word_vecs(words,load_cp):
 		save_cpickle(w2v_words,vecs,fpath="dvec.cp")
 		return w2v_words,vecs
 
-def cluster_words(words, load_cp):
-	#fwords,W = get_distance_matrix(words,load_cp)
+
+def cluster_words(words, score_set, load_cp, k=3, viz=False):
 	fwords,vecs = get_word_vecs(words,load_cp)
+	assert set(words)==set(fwords)
 	n = len(fwords)
-	# ds = []
-	# ks = []
-	# for k in xrange(2,30):
-	# 	_,d,_ = clst.kmedoids(W,nclusters=k,npass=20)
-	# 	ks.append(k)
-	# 	ds.append(d)
-	# plt.plot(ks,ds)
-	# plt.show()
 	vec_2d = tsne.bh_sne(vecs, d=2,  perplexity=2.0)
 	k_guess = min(n/5,15)
-	print(k_guess)
 	clusters,_,_ = clst.kcluster(vec_2d,nclusters=8,npass=40)
 	clusters = np.array(clusters)
 	categories = np.unique(clusters)
+
+	word_clusters = []
 	for c in categories:
 		members = np.arange(n)[clusters==c]
 		cwords = [fwords[i] for i in members]
-		print cwords
-		print "-------"
-	# # vec_2d = tsne.bh_sne(np.array(vecs), perplexity=2.0)
-	# plt.figure()
-	# plt.scatter(vec_2d[:,0], vec_2d[:,1])
-	# ax = plt.gca()
-	# for i in xrange(len(filt_words)):
-	# 	ax.text(vec_2d[i,0], vec_2d[i,1], filt_words[i])
-	# #plt.scatter(vec_2d[:,0], vec_2d[:,1])
-	# plt.show()
+		word_clusters.append(cwords)
+	
+	## get top-k words from each cluster:	
+
+
+	if viz:
+		plt.figure()
+		plt.scatter(vec_2d[:,0], vec_2d[:,1])
+		ax = plt.gca()
+		for i in xrange(len(filt_words)):
+			ax.text(vec_2d[i,0], vec_2d[i,1], filt_words[i])
+		plt.show()
 
 
 
-def co_occurence(text):
+def co_occurence(text, load_cp, ntextrank=4, viz=False):
 	"""
 	Returns a set of POS filtered words and their
 	co-occurence matrix.
@@ -287,53 +269,63 @@ def co_occurence(text):
 			coccur[i,j] = coccur[j,i] = np.min(ssd.cdist(i_loc,j_loc))
 
 	## get the word2vec distances:
-	filt_words,W = get_distance_matrix(unique_words, load_cp=False)
+	filt_words,W = get_distance_matrix(unique_words, load_cp)
 
 	## filter out the words which are not in word2vec:
 	filt_inds = np.atleast_2d(np.where([w in filt_words for w in unique_words]))
 	W_coccur = coccur[filt_inds.T,filt_inds]
 
+	## reciprocate the co-occurence matrix:
 	Winv_coccur = np.zeros_like(W_coccur)
 	Winv_coccur[np.nonzero(W_coccur)] = 1/ W_coccur[np.nonzero(W_coccur)]
 
-	## combine the two weights:
-	# W_comb = np.zeros_like(W) + np.spacing(0)
-	# W_comb[W_coccur<=5] = 1.0
-	# W_comb *= W
-	#W_comb = np.minimum(W**2,Winv_coccur)
-	"""
-	Hungary 	: 1.72271918704
-	Budapest 	: 1.6737742823
-	next 	: 1.59134592392
-	downtown 	: 1.55522856704
-	country 	: 1.47391506924
-	restaurant 	: 1.44272620974
-	bread 	: 1.44220560433
-	McDonald 	: 1.41007868451
-	first 	: 1.32702981947
-	local 	: 1.31685225042
-	European 	: 1.26148004264
+	## only have an edge if the co-occurence is less than NTEXTRANK:
+	W_txtrank = W_coccur <= ntextrank
+	W_txtrank -= np.diag(np.diag(W_txtrank))
 
-	W_comb = Winv_coccur
-	=====================
-	McDonald 	: 2.746981124
-	next 	: 1.66676978966
-	restaurant 	: 1.58067877974
-	Big 	: 1.51673487474
-	country 	: 1.46177006154
-	communist 	: 1.4612514291
-	American 	: 1.43769439253
-	Belgrade 	: 1.43292695039
-	"""
+	## combine Word2Vec and Co-occurence:
 	W_comb = np.minimum(W,Winv_coccur)
+	
+	wscores_w2v  = textrank_loopy(W, d=0.85, etol=1e-4)
+	wscores_comb = textrank_loopy(W_comb, d=0.85, etol=1e-4)
+	wscores_coccur = textrank_loopy(W_coccur, d=0.85, etol=1e-4)
+	wscores_txtrank = textrank_loopy(W_txtrank, d=0.85, etol=1e-4)
 
-	wscores = textrank_loopy(W_comb, d=0.85, etol=1e-4)
-	visualize(filt_words,wscores,W_comb)
-	isort = np.argsort(-wscores[:,0])
+	isort = np.argsort(-wscores_comb[:,0])
 	for i in xrange(len(isort)):
-		print filt_words[isort[i]], "\t:", wscores[isort[i],0]
+		print filt_words[isort[i]], "\t:", wscores_comb[isort[i],0]
 
-	return unique_words, coccur
+	if viz:
+		visualize(filt_words,wscores_txtrank,W_txtrank)
+
+	weights = { 'coccur'  : wscores_coccur,
+			  	'w2v'     : wscores_w2v,
+			  	'thresh'  : wscores_txtrank,
+			  	'comb'    : wscores_comb }
+
+	return filt_words, weights
+
+
+def get_keywords(text):
+	"""
+	Gets keywords :
+	---------------
+
+		1. Using text-rank under different weights
+		   for the edges:
+		   		(a) coccur : edge-weights = 1/[co-occurence distance]
+		   		(b) w2v    : edge-weights = word2vec cosine similarity
+		   		(c) thresh : edge-weights = 1 if co-occurence distance < 4 else 0
+		   		(d) comb   : edge-weights = min(w2v_ij, coccur_ij)
+
+		2. K-means clustering on word2vec word-vectors:
+		   	[X] Clusters are filtered for stability/ shape
+		   	- The "Top 3" are based on scores from text-rank
+
+				(a) Extractive  : Top 3 words per cluster
+				(b) Abstractive : Top 3 closest words in w2vec space
+				                  to each cluster
+	"""
 
 
 def load_text(fname='AP880314-0110.S'):
